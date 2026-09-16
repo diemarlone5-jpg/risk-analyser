@@ -12,15 +12,69 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. INJECTION CSS POUR SUPPRIMER TOUS LES ARTÉFACTS ---
+# --- 2. INJECTION CSS CYBERPUNK (FOND NOIR & BLEU FLUOR) ---
 st.markdown("""
     <style>
+    /* Masquer les éléments Streamlit Cloud / Branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stAppDeployButton {display:none;}
     [data-testid="stToolbar"] {display: none !important;}
     div[data-testid="stDecoration"] {display: none !important;}
+
+    /* Fond noir global et texte lumineux */
+    .stApp {
+        background-color: #0b0f19;
+        color: #e2e8f0;
+    }
+
+    /* Barre latérale sombre */
+    [data-testid="stSidebar"] {
+        background-color: #030712;
+        border-right: 1px solid #1e293b;
+    }
+
+    /* Titres en bleu fluor / cyan */
+    h1, h2, h3 {
+        color: #00f3ff !important;
+        font-family: 'Courier New', Courier, monospace;
+        letter-spacing: -0.5px;
+    }
+
+    /* Boutons personnalisés bleu fluor */
+    .stButton>button {
+        background: linear-gradient(135deg, #00f3ff 0%, #0072ff 100%);
+        color: #030712;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        padding: 0.6rem 1rem;
+        box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        box-shadow: 0 0 25px rgba(0, 243, 255, 0.8);
+        color: #ffffff;
+    }
+
+    /* Champs de saisie style terminal */
+    .stTextInput>div>div>input {
+        background-color: #111827;
+        color: #00f3ff;
+        border: 1px solid #1f2937;
+        border-radius: 6px;
+    }
+    .stTextInput>div>div>input:focus {
+        border-color: #00f3ff;
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+    }
+
+    /* Conteneurs et Tableaux */
+    [data-testid="stMetricValue"] {
+        color: #00f3ff !important;
+    }
+    
     .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
@@ -49,55 +103,54 @@ def init_supabase():
 
 supabase: Client = init_supabase()
 
-# --- 4. BARRE LATÉRALE (SIDEBAR) EN FRANÇAIS ---
+# --- 4. BARRE LATÉRALE (SIDEBAR) ---
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/security-checked.png", width=80)
-    st.header("URL Risk Analyzer")
-    st.caption("Plateforme d'analyse de menaces web")
+    st.image("https://img.icons8.com/color/96/security-checked.png", width=70)
+    st.header("SOC TERMINAL")
+    st.caption("Cyber Intelligence & Defense")
     
     st.markdown("---")
     st.subheader("État du système")
     
     if supabase:
-        st.success("Base de données : Connectée")
+        st.success("Supabase : Connecté")
     else:
-        st.warning("Base de données : Hors-ligne")
+        st.warning("Supabase : Hors-ligne")
         
     if VIRUSTOTAL_API_KEY and VIRUSTOTAL_API_KEY != "TA_CLE_VIRUSTOTAL":
-        st.success("Moteur VirusTotal : Actif")
+        st.success("VirusTotal API : Actif")
     else:
-        st.error("Moteur VirusTotal : Non configuré")
+        st.error("VirusTotal API : Non configuré")
         
     st.markdown("---")
-    st.subheader("Guide des Risques")
+    st.subheader("Guide des Niveaux")
     st.markdown("""
-    - **SÉCURISÉ** : Aucun signal malveillant.
-    - **SUSPECT** : Signaux mineurs détectés.
-    - **DANGEREUX** : Menace avérée / Anomalie / Phishing.
+    - 🟢 **SÛR** : Aucun risque.
+    - 🟡 **SUSPECT** : Signaux mineurs.
+    - 🔴 **DANGEREUX** : Menace avérée.
     """)
     st.markdown("---")
-    st.info("💡 **Conseil** : Analysez systématiquement tout lien suspect.")
+    st.info("⚡ **Mode Présentation** : Sécurité maximale active.")
 
 # --- 5. EN-TÊTE DE L'APPLICATION ---
-st.title("🛡️ Tableau de bord d'analyse des risques liés aux URL")
-st.markdown("Plateforme d'analyse avancée de menaces web propulsée par l'agrégation de plus de 70 moteurs de sécurité.")
+st.title("🛡️ SOC URL Intelligence Dashboard")
+st.markdown("Surveillance en temps réel, analyse de menaces web et journalisation Supabase.")
 
 st.markdown("---")
 
-# --- 6. LOGIQUE D'ANALYSE STRICTE ---
-st.subheader("🔍 Lancer une enquête")
+# --- 6. LOGIQUE D'ANALYSE ---
+st.subheader("🔍 Lancer une enquête de vulnérabilité")
 url_to_analyze = st.text_input("Entrez l'URL complète à analyser :", placeholder="https://exemple.com")
 analyze_button = st.button("Lancer l'analyse de sécurité", type="primary", use_container_width=True)
 
 if analyze_button and url_to_analyze:
     if VIRUSTOTAL_API_KEY == "TA_CLE_VIRUSTOTAL":
-        st.error("⚠️ Veuillez configurer votre clé API VirusTotal pour lancer l'analyse.")
+        st.error("⚠️ Veuillez configurer votre clé API VirusTotal.")
     else:
-        with st.spinner("🔄 Interrogation croisée des bases de données de menaces..."):
+        with st.spinner("🔄 Interrogation des moteurs de cyber-menaces en cours..."):
             try:
                 headers = {"x-apikey": VIRUSTOTAL_API_KEY}
                 
-                # Cache VirusTotal via Base64
                 url_bytes = url_to_analyze.encode("utf-8")
                 url_id = base64.urlsafe_b64encode(url_bytes).decode("utf-8").strip("=")
                 report_url = f"https://www.virustotal.com/api/v3/urls/{url_id}"
@@ -111,7 +164,6 @@ if analyze_button and url_to_analyze:
                     stats = attributes.get("last_analysis_stats", {})
                     api_success = True
                 
-                # Fallback POST si absent du cache
                 if not api_success or not stats or all(v == 0 for v in stats.values()):
                     post_resp = requests.post(
                         "https://www.virustotal.com/api/v3/urls",
@@ -131,12 +183,11 @@ if analyze_button and url_to_analyze:
                 harmless = stats.get("harmless", 0)
                 undetected = stats.get("undetected", 0)
                 
-                # Configuration stricte
                 if not api_success or (malicious == 0 and suspicious == 0 and harmless == 0 and undetected == 0):
-                    risk_level = "DANGEROUS"
+                    risk_level = "DANGEREUX"
                     malicious = 1
                 elif malicious > 0:
-                    risk_level = "DANGEROUS"
+                    risk_level = "DANGEREUX"
                 elif suspicious > 0:
                     risk_level = "SUSPICIOUS"
                 else:
@@ -144,12 +195,12 @@ if analyze_button and url_to_analyze:
                     
                 st.markdown("### 📊 Résultats du Rapport d'Analyse")
                 
-                if risk_level == "DANGEROUS":
-                    st.error(f"🚨 **Statut : DANGEROUS** — Menace ou anomalie critique détectée par le moteur de sécurité !")
+                if risk_level == "DANGEREUX":
+                    st.error(f"🚨 **Statut : DANGEREUX** — Menace critique identifiée !")
                 elif risk_level == "SUSPICIOUS":
-                    st.warning(f"⚠️ **Statut : SUSPICIOUS** — Des signaux mineurs ont été détectés ({suspicious} alertes).")
+                    st.warning(f"⚠️ **Statut : SUSPECT** — Indicateurs mineurs ({suspicious} alertes).")
                 else:
-                    st.success(f"🟢 **Statut : SAFE** — Aucun moteur n'a détecté de menace active.")
+                    st.success(f"🟢 **Statut : SÛR** — Trafic sain.")
                     
                 res1, res2, res3, res4 = st.columns(4)
                 res1.metric("🔴 Malveillants", malicious)
@@ -174,7 +225,7 @@ if analyze_button and url_to_analyze:
 
 # --- 7. HISTORIQUE RÉCENT ---
 st.markdown("---")
-st.subheader("📜 Historique des Analyses Récentes")
+st.subheader("📜 Journaux d'Analyse en Direct (Supabase)")
 
 if supabase:
     try:
@@ -207,8 +258,8 @@ if supabase:
                 hide_index=True
             )
         else:
-            st.info("Aucune analyse enregistrée pour le moment.")
+            st.info("Aucun journal d'analyse pour le moment.")
     except Exception as e:
-        st.info("Impossible de charger l'historique pour le moment.")
+        st.info("Impossible de charger les journaux.")
 else:
     st.info("Base de données non connectée.")
