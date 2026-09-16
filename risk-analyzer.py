@@ -6,16 +6,15 @@ from supabase import create_client, Client
 
 # --- 1. CONFIGURATION DE LA PAGE ---
 st.set_page_config(
-    page_title="URL Risk Analyzer",
+    page_title="URL Risk Analyzer | SOC Terminal",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- 2. INJECTION CSS CYBERPUNK (FOND NOIR & BLEU FLUOR) ---
+# --- 2. INJECTION CSS CYBERPUNK ---
 st.markdown("""
     <style>
-    /* Masquer les éléments Streamlit Cloud / Branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -23,26 +22,19 @@ st.markdown("""
     [data-testid="stToolbar"] {display: none !important;}
     div[data-testid="stDecoration"] {display: none !important;}
 
-    /* Fond noir global et texte lumineux */
     .stApp {
         background-color: #0b0f19;
         color: #e2e8f0;
     }
-
-    /* Barre latérale sombre */
     [data-testid="stSidebar"] {
         background-color: #030712;
         border-right: 1px solid #1e293b;
     }
-
-    /* Titres en bleu fluor / cyan */
     h1, h2, h3 {
         color: #00f3ff !important;
         font-family: 'Courier New', Courier, monospace;
         letter-spacing: -0.5px;
     }
-
-    /* Boutons personnalisés bleu fluor */
     .stButton>button {
         background: linear-gradient(135deg, #00f3ff 0%, #0072ff 100%);
         color: #030712;
@@ -57,20 +49,12 @@ st.markdown("""
         box-shadow: 0 0 25px rgba(0, 243, 255, 0.8);
         color: #ffffff;
     }
-
-    /* Champs de saisie style terminal */
     .stTextInput>div>div>input {
         background-color: #111827;
         color: #00f3ff;
         border: 1px solid #1f2937;
         border-radius: 6px;
     }
-    .stTextInput>div>div>input:focus {
-        border-color: #00f3ff;
-        box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
-    }
-
-    /* Tableaux */
     table {
         background-color: #0b0f19 !important;
         color: #e2e8f0 !important;
@@ -91,11 +75,9 @@ st.markdown("""
         border-bottom: 1px solid #1f2937 !important;
         padding: 12px;
     }
-
     [data-testid="stMetricValue"] {
         color: #00f3ff !important;
     }
-    
     .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
@@ -103,7 +85,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CONFIGURATION SÉCURISÉE SUPABASE & VIRUSTOTAL ---
+# --- 3. CONFIGURATION SÉCURISÉE ---
 try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -124,25 +106,17 @@ def init_supabase():
 
 supabase: Client = init_supabase()
 
-# --- 4. BARRE LATÉRALE (SIDEBAR) ---
+# --- 4. BARRE LATÉRALE ---
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/security-checked.png", width=70)
-    st.header("Risk Analyzer")
+    st.header("SOC TERMINAL")
     st.caption("Cyber Intelligence & Defense")
     
     st.markdown("---")
     st.subheader("État du système")
+    st.success("Supabase : Connecté" if supabase else "Supabase : Hors-ligne")
+    st.success("VirusTotal API : Actif" if VIRUSTOTAL_API_KEY != "TA_CLE_VIRUSTOTAL" else "VirusTotal API : Non configuré")
     
-    if supabase:
-        st.success("Supabase : Connecté")
-    else:
-        st.warning("Supabase : Hors-ligne")
-        
-    if VIRUSTOTAL_API_KEY and VIRUSTOTAL_API_KEY != "TA_CLE_VIRUSTOTAL":
-        st.success("VirusTotal API : Actif")
-    else:
-        st.error("VirusTotal API : Non configuré")
-        
     st.markdown("---")
     st.subheader("Guide des Niveaux")
     st.markdown("""
@@ -150,29 +124,42 @@ with st.sidebar:
     - 🟡 **SUSPICIOUS** : Signaux mineurs.
     - 🔴 **DANGEROUS** : Menace avérée.
     """)
-    st.markdown("---")
-    st.info("⚡ **Mode Présentation** : Sécurité maximale active.")
 
-# --- 5. EN-TÊTE DE L'APPLICATION ---
+# --- 5. EN-TÊTE ---
 st.title("🛡️ URL Risk Analyzer")
-st.markdown("Surveillance en temps réel, analyse de menaces web et journalisation Supabase.")
-
+st.markdown("Surveillance SOC en temps réel : Analyse d'URL et extraction de domaines par e-mail.")
 st.markdown("---")
 
-# --- 6. LOGIQUE D'ANALYSE ---
+# --- 6. LOGIQUE D'ANALYSE (URL OU EMAIL) ---
 st.subheader("🔍 Lancer une enquête de vulnérabilité")
-url_to_analyze = st.text_input("Entrez l'URL complète à analyser :", placeholder="https://exemple.com")
+
+input_type = st.radio("Sélectionnez le type d'entrée à analyser :", ["URL Complète", "Adresse Email (Extraction de domaine)"])
+
+target_to_analyze = ""
+if input_type == "URL Complète":
+    target_to_analyze = st.text_input("Entrez l'URL complète :", placeholder="https://exemple.com/path")
+else:
+    email_input = st.text_input("Entrez l'adresse email :", placeholder="contact@entreprise.com")
+    if email_input and "@" in email_input:
+        # Extraction automatique du domaine comme demandé dans le sujet
+        domain = email_input.split("@")[1]
+        target_to_analyze = f"https://{domain}"
+        st.info(f"📌 Domaine extrait automatiquement : **{domain}** (Analyse de : `{target_to_analyze}`)")
+    elif email_input:
+        st.error("Format d'e-mail invalide.")
+
 analyze_button = st.button("Lancer l'analyse de sécurité", type="primary", use_container_width=True)
 
-if analyze_button and url_to_analyze:
-    if VIRUSTOTAL_API_KEY == "TA_CLE_VIRUSTOTAL":
+if analyze_button:
+    if not target_to_analyze:
+        st.warning("⚠️ Veuillez saisir une donnée valide avant de lancer l'analyse.")
+    elif VIRUSTOTAL_API_KEY == "TA_CLE_VIRUSTOTAL":
         st.error("⚠️ Veuillez configurer votre clé API VirusTotal.")
     else:
         with st.spinner("🔄 Interrogation des moteurs de cyber-menaces en cours..."):
             try:
                 headers = {"x-apikey": VIRUSTOTAL_API_KEY}
-                
-                url_bytes = url_to_analyze.encode("utf-8")
+                url_bytes = target_to_analyze.encode("utf-8")
                 url_id = base64.urlsafe_b64encode(url_bytes).decode("utf-8").strip("=")
                 report_url = f"https://www.virustotal.com/api/v3/urls/{url_id}"
                 
@@ -188,7 +175,7 @@ if analyze_button and url_to_analyze:
                 if not api_success or not stats or all(v == 0 for v in stats.values()):
                     post_resp = requests.post(
                         "https://www.virustotal.com/api/v3/urls",
-                        data={"url": url_to_analyze},
+                        data={"url": target_to_analyze},
                         headers=headers
                     )
                     if post_resp.status_code == 200:
@@ -232,7 +219,7 @@ if analyze_button and url_to_analyze:
                 if supabase:
                     try:
                         data_to_insert = {
-                            "url": url_to_analyze,
+                            "url": target_to_analyze,
                             "risk_level": risk_level,
                             "malicious_count": malicious,
                             "suspicious_count": suspicious
@@ -255,23 +242,17 @@ if supabase:
         
         if data:
             df = pd.DataFrame(data)
-            
-            if "url" in df.columns:
-                display_df = df[["created_at", "url", "risk_level", "malicious_count", "suspicious_count"]].copy()
-            else:
-                display_df = df.copy()
+            display_df = df[["created_at", "url", "risk_level", "malicious_count", "suspicious_count"]].copy()
 
             column_mapping = {
                 "created_at": "Date & Heure",
-                "url": "URL Analysée",
+                "url": "Cible Analysée",
                 "risk_level": "Niveau de Risque",
                 "malicious_count": "Malveillants",
                 "suspicious_count": "Suspects"
             }
-            display_df = display_df.rename(columns={k: v for k, v in column_mapping.items() if k in display_df.columns})
-
-            if "Date & Heure" in display_df.columns:
-                display_df["Date & Heure"] = pd.to_datetime(display_df["Date & Heure"]).dt.strftime('%Y-%m-%d %H:%M:%S')
+            display_df = display_df.rename(columns=column_mapping)
+            display_df["Date & Heure"] = pd.to_datetime(display_df["Date & Heure"]).dt.strftime('%Y-%m-%d %H:%M:%S')
 
             st.table(display_df)
         else:
