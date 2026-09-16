@@ -70,6 +70,11 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
     }
 
+    /* Forcer le fond du tableau en noir */
+    [data-testid="stDataFrame"], div[data-testid="stDataFrame"] > div {
+        background-color: #0b0f19 !important;
+    }
+
     /* Conteneurs et Tableaux */
     [data-testid="stMetricValue"] {
         color: #00f3ff !important;
