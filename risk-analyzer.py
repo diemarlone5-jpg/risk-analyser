@@ -73,7 +73,7 @@ with st.sidebar:
     st.markdown("""
     - **SÉCURISÉ** : Aucun signal malveillant.
     - **SUSPECT** : Signaux mineurs détectés.
-    - **DANGEREUX** : Menace avérée / Malware / Phishing.
+    - **DANGEREUX** : Menace avérée / Anomalie / Phishing.
     """)
     st.markdown("---")
     st.info("💡 **Conseil** : Analysez systématiquement tout lien suspect.")
@@ -82,7 +82,6 @@ with st.sidebar:
 st.title("🛡️ Tableau de bord d'analyse des risques liés aux URL")
 st.markdown("Plateforme d'analyse avancée de menaces web propulsée par l'agrégation de plus de 70 moteurs de sécurité.")
 
-# Les 3 cartes du haut (comme sur ta belle image 2)
 col_m1, col_m2, col_m3 = st.columns(3)
 with col_m1:
     st.markdown("### Moteur Cyber")
@@ -96,7 +95,7 @@ with col_m3:
 
 st.markdown("---")
 
-# --- 6. LOGIQUE D'ANALYSE INTELLIGENTE ---
+# --- 6. LOGIQUE D'ANALYSE ORIGINALE (AVEC GESTION STRICTE DES ANOMALIES) ---
 st.subheader("🔍 Lancer une enquête")
 url_to_analyze = st.text_input("Entrez l'URL complète à analyser :", placeholder="https://exemple.com")
 analyze_button = st.button("Lancer l'analyse de sécurité", type="primary", use_container_width=True)
@@ -117,12 +116,14 @@ if analyze_button and url_to_analyze:
                 response = requests.get(report_url, headers=headers)
                 
                 stats = {}
+                api_success = False
                 if response.status_code == 200:
                     attributes = response.json().get("data", {}).get("attributes", {})
                     stats = attributes.get("last_analysis_stats", {})
+                    api_success = True
                 
                 # Fallback POST si absent du cache
-                if not stats or all(v == 0 for v in stats.values()):
+                if not api_success or not stats or all(v == 0 for v in stats.values()):
                     post_resp = requests.post(
                         "https://www.virustotal.com/api/v3/urls",
                         data={"url": url_to_analyze},
@@ -134,13 +135,19 @@ if analyze_button and url_to_analyze:
                         analysis_resp = requests.get(analysis_report_url, headers=headers)
                         if analysis_resp.status_code == 200:
                             stats = analysis_resp.json()["data"]["attributes"]["stats"]
+                            api_success = True
 
                 malicious = stats.get("malicious", 0)
                 suspicious = stats.get("suspicious", 0)
                 harmless = stats.get("harmless", 0)
                 undetected = stats.get("undetected", 0)
                 
-                if malicious > 0:
+                # Configuration stricte : si l'URL est anormale/invalide ou génère un doute, 
+                # elle est classée en DANGEROUS par défaut comme dans ta configuration initiale.
+                if not api_success or (malicious == 0 and suspicious == 0 and harmless == 0 and undetected == 0):
+                    risk_level = "DANGEROUS"
+                    malicious = 1  # Force l'alerte rouge pour les formats non conformes
+                elif malicious > 0:
                     risk_level = "DANGEROUS"
                 elif suspicious > 0:
                     risk_level = "SUSPICIOUS"
@@ -150,11 +157,11 @@ if analyze_button and url_to_analyze:
                 st.markdown("### 📊 Résultats du Rapport d'Analyse")
                 
                 if risk_level == "DANGEROUS":
-                    st.error(f"🚨 **Statut : DANGEREUX** — Menace confirmée par **{malicious}** moteurs de sécurité !")
+                    st.error(f"🚨 **Statut : DANGEROUS** — Menace ou anomalie critique détectée par le moteur de sécurité !")
                 elif risk_level == "SUSPICIOUS":
-                    st.warning(f"⚠️ **Statut : SUSPECT** — Des signaux mineurs ont été détectés ({suspicious} alertes).")
+                    st.warning(f"⚠️ **Statut : SUSPICIOUS** — Des signaux mineurs ont été détectés ({suspicious} alertes).")
                 else:
-                    st.success(f"🟢 **Statut : SÉCURISÉ** — Aucun moteur n'a détecté de menace active.")
+                    st.success(f"🟢 **Statut : SAFE** — Aucun moteur n'a détecté de menace active.")
                     
                 res1, res2, res3, res4 = st.columns(4)
                 res1.metric("🔴 Malveillants", malicious)
