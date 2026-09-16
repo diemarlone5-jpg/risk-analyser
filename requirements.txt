@@ -1,0 +1,5 @@
+streamlit
+requests
+supabase
+validators
+python-dotenv
