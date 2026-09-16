@@ -78,24 +78,13 @@ with st.sidebar:
     st.markdown("---")
     st.info("💡 **Conseil** : Analysez systématiquement tout lien suspect.")
 
-# --- 5. EN-TÊTE DE L'APPLICATION & CARTES DESIGN ---
+# --- 5. EN-TÊTE DE L'APPLICATION ---
 st.title("🛡️ Tableau de bord d'analyse des risques liés aux URL")
 st.markdown("Plateforme d'analyse avancée de menaces web propulsée par l'agrégation de plus de 70 moteurs de sécurité.")
 
-col_m1, col_m2, col_m3 = st.columns(3)
-with col_m1:
-    st.markdown("### Moteur Cyber")
-    st.markdown("#### VirusTotal v3")
-with col_m2:
-    st.markdown("### Stockage")
-    st.markdown("#### Supabase Cloud")
-with col_m3:
-    st.markdown("### Niveau d'Analyse")
-    st.markdown("#### Temps Réel (Hybride)")
-
 st.markdown("---")
 
-# --- 6. LOGIQUE D'ANALYSE ORIGINALE (AVEC GESTION STRICTE DES ANOMALIES) ---
+# --- 6. LOGIQUE D'ANALYSE STRICTE ---
 st.subheader("🔍 Lancer une enquête")
 url_to_analyze = st.text_input("Entrez l'URL complète à analyser :", placeholder="https://exemple.com")
 analyze_button = st.button("Lancer l'analyse de sécurité", type="primary", use_container_width=True)
@@ -142,11 +131,10 @@ if analyze_button and url_to_analyze:
                 harmless = stats.get("harmless", 0)
                 undetected = stats.get("undetected", 0)
                 
-                # Configuration stricte : si l'URL est anormale/invalide ou génère un doute, 
-                # elle est classée en DANGEROUS par défaut comme dans ta configuration initiale.
+                # Configuration stricte
                 if not api_success or (malicious == 0 and suspicious == 0 and harmless == 0 and undetected == 0):
                     risk_level = "DANGEROUS"
-                    malicious = 1  # Force l'alerte rouge pour les formats non conformes
+                    malicious = 1
                 elif malicious > 0:
                     risk_level = "DANGEROUS"
                 elif suspicious > 0:
