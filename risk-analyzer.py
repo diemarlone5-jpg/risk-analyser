@@ -6,7 +6,7 @@ from supabase import create_client, Client
 
 # --- 1. CONFIGURATION DE LA PAGE ---
 st.set_page_config(
-    page_title="URL Risk Analyzer | SOC Dashboard",
+    page_title="URL Risk Analyzer",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -70,12 +70,28 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
     }
 
-    /* Forcer le fond du tableau en noir */
-    [data-testid="stDataFrame"], div[data-testid="stDataFrame"] > div {
+    /* Tableaux */
+    table {
         background-color: #0b0f19 !important;
+        color: #e2e8f0 !important;
+        border-collapse: collapse;
+        width: 100%;
+    }
+    thead tr th {
+        background-color: #111827 !important;
+        color: #00f3ff !important;
+        border-bottom: 2px solid #00f3ff !important;
+        text-align: left;
+        padding: 12px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    tbody tr td {
+        background-color: #0b0f19 !important;
+        color: #e2e8f0 !important;
+        border-bottom: 1px solid #1f2937 !important;
+        padding: 12px;
     }
 
-    /* Conteneurs et Tableaux */
     [data-testid="stMetricValue"] {
         color: #00f3ff !important;
     }
@@ -111,7 +127,7 @@ supabase: Client = init_supabase()
 # --- 4. BARRE LATÉRALE (SIDEBAR) ---
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/security-checked.png", width=70)
-    st.header("SOC TERMINAL")
+    st.header("Risk Analyzer")
     st.caption("Cyber Intelligence & Defense")
     
     st.markdown("---")
@@ -130,15 +146,15 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("Guide des Niveaux")
     st.markdown("""
-    - 🟢 **SÛR** : Aucun risque.
-    - 🟡 **SUSPECT** : Signaux mineurs.
-    - 🔴 **DANGEREUX** : Menace avérée.
+    - 🟢 **SAFE** : Aucun risque.
+    - 🟡 **SUSPICIOUS** : Signaux mineurs.
+    - 🔴 **DANGEROUS** : Menace avérée.
     """)
     st.markdown("---")
     st.info("⚡ **Mode Présentation** : Sécurité maximale active.")
 
 # --- 5. EN-TÊTE DE L'APPLICATION ---
-st.title("🛡️ SOC URL Intelligence Dashboard")
+st.title("🛡️ URL Risk Analyzer")
 st.markdown("Surveillance en temps réel, analyse de menaces web et journalisation Supabase.")
 
 st.markdown("---")
@@ -189,10 +205,10 @@ if analyze_button and url_to_analyze:
                 undetected = stats.get("undetected", 0)
                 
                 if not api_success or (malicious == 0 and suspicious == 0 and harmless == 0 and undetected == 0):
-                    risk_level = "DANGEREUX"
+                    risk_level = "DANGEROUS"
                     malicious = 1
                 elif malicious > 0:
-                    risk_level = "DANGEREUX"
+                    risk_level = "DANGEROUS"
                 elif suspicious > 0:
                     risk_level = "SUSPICIOUS"
                 else:
@@ -200,12 +216,12 @@ if analyze_button and url_to_analyze:
                     
                 st.markdown("### 📊 Résultats du Rapport d'Analyse")
                 
-                if risk_level == "DANGEREUX":
-                    st.error(f"🚨 **Statut : DANGEREUX** — Menace critique identifiée !")
+                if risk_level == "DANGEROUS":
+                    st.error(f"🚨 **Statut : DANGEROUS** — Menace critique identifiée !")
                 elif risk_level == "SUSPICIOUS":
-                    st.warning(f"⚠️ **Statut : SUSPECT** — Indicateurs mineurs ({suspicious} alertes).")
+                    st.warning(f"⚠️ **Statut : SUSPICIOUS** — Indicateurs mineurs ({suspicious} alertes).")
                 else:
-                    st.success(f"🟢 **Statut : SÛR** — Trafic sain.")
+                    st.success(f"🟢 **Statut : SAFE** — Trafic sain.")
                     
                 res1, res2, res3, res4 = st.columns(4)
                 res1.metric("🔴 Malveillants", malicious)
@@ -257,11 +273,7 @@ if supabase:
             if "Date & Heure" in display_df.columns:
                 display_df["Date & Heure"] = pd.to_datetime(display_df["Date & Heure"]).dt.strftime('%Y-%m-%d %H:%M:%S')
 
-            st.dataframe(
-                display_df,
-                use_container_width=True,
-                hide_index=True
-            )
+            st.table(display_df)
         else:
             st.info("Aucun journal d'analyse pour le moment.")
     except Exception as e:
