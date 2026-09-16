@@ -161,7 +161,6 @@ if analyze_button and url_to_analyze:
                     try:
                         data_to_insert = {
                             "url": url_to_analyze,
-                            "input_url": url_to_analyze,
                             "risk_level": risk_level,
                             "malicious_count": malicious,
                             "suspicious_count": suspicious
@@ -187,9 +186,6 @@ if supabase:
             
             if "url" in df.columns:
                 display_df = df[["created_at", "url", "risk_level", "malicious_count", "suspicious_count"]].copy()
-            elif "input_url" in df.columns:
-                display_df = df[["created_at", "input_url", "risk_level", "malicious_count", "suspicious_count"]].copy()
-                display_df.rename(columns={"input_url": "url"}, inplace=True)
             else:
                 display_df = df.copy()
 
