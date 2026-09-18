@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS AVANCÉ : EFFET CARDS & DESIGN SOC ---
+# --- STYLE CSS PROPRE ET HARMONISÉ ---
 st.markdown("""
     <style>
     [data-testid="stHeader"] {
@@ -24,19 +24,10 @@ st.markdown("""
         background-color: #050b14;
         border-right: 1px solid #0077ff33;
     }
-    
-    /* Style des conteneurs en mode "Cartes Cyberpunk" */
-    .soc-card {
-        background-color: #050b14;
-        border: 1px solid #0077ff44;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 15px rgba(0, 119, 255, 0.05);
-        margin-bottom: 20px;
-    }
 
+    /* Style épuré des champs de saisie */
     .stTextInput input {
-        background-color: #020617;
+        background-color: #050b14;
         color: #38bdf8;
         border: 1px solid #0077ff77;
         border-radius: 6px;
@@ -46,6 +37,7 @@ st.markdown("""
         box-shadow: 0 0 10px #00d2ff44;
     }
 
+    /* Boutons d'action en dégradé de bleu professionnel */
     .stButton button {
         background: linear-gradient(90deg, #0284c7, #00d2ff);
         color: #000000;
@@ -54,7 +46,6 @@ st.markdown("""
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 1px;
-        width: 100%;
         transition: all 0.3s ease;
     }
     .stButton button:hover {
@@ -113,52 +104,43 @@ with col_title:
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
-# --- SECTION ENQUÊTE DANS UNE CARTE DESIGN ---
+# --- SECTION ENQUÊTE PROPRE ---
 st.markdown("### 🔍 INITIATION D'UNE ENQUÊTE")
 
-with st.container():
-    st.markdown('<div class="soc-card">', unsafe_allow_html=True)
-    
-    input_value = st.text_input(
-        "Cible de l'analyse (URL) :", 
-        value="", 
-        placeholder="https://exemple.com/path/suspect"
-    )
+input_value = st.text_input(
+    "Cible de l'analyse (URL) :", 
+    value="", 
+    placeholder="https://exemple.com/path/suspect"
+)
 
-    col_btn1, col_btn2 = st.columns([1, 2])
-    with col_btn1:
-        analyze_clicked = st.button("Lancer l'analyse", type="primary")
+if st.button("Lancer l'analyse de sécurité", type="primary"):
+    if not input_value:
+        st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
+    else:
+        with st.spinner("Exécution des sondes VirusTotal & consignation des logs..."):
+            niveau_risque = "SÛR"
+            nb_malveillants = 0
+            nb_suspects = 0
+            
+            if "eicar" in input_value.lower() or "hacker" in input_value.lower():
+                niveau_risque = "DANGEROUS"
+                nb_malveillants = 1
 
-    if analyze_clicked:
-        if not input_value:
-            st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
-        else:
-            with st.spinner("Exécution des sondes VirusTotal & consignation des logs..."):
-                niveau_risque = "SÛR"
-                nb_malveillants = 0
-                nb_suspects = 0
-                
-                if "eicar" in input_value.lower() or "hacker" in input_value.lower():
-                    niveau_risque = "DANGEROUS"
-                    nb_malveillants = 1
-
-                if supabase_connected:
-                    try:
-                        data_to_insert = {
-                            "input_url": input_value,
-                            "risk_level": niveau_risque,
-                            "malicious_count": nb_malveillants,
-                            "suspicious_count": nb_suspects,
-                            "user_email": current_session
-                        }
-                        supabase.table("analyses").insert(data_to_insert).execute()
-                        st.success("Cible analysée et consignée dans le registre sécurisé.")
-                    except Exception as ex:
-                        st.error(f"Erreur d'écriture en base : {ex}")
-                else:
-                    st.warning("Analyse effectuée, mais non enregistrée (Base déconnectée).")
-                    
-    st.markdown('</div>', unsafe_allow_html=True)
+            if supabase_connected:
+                try:
+                    data_to_insert = {
+                        "input_url": input_value,
+                        "risk_level": niveau_risque,
+                        "malicious_count": nb_malveillants,
+                        "suspicious_count": nb_suspects,
+                        "user_email": current_session
+                    }
+                    supabase.table("analyses").insert(data_to_insert).execute()
+                    st.success("Cible analysée et consignée dans le registre sécurisé.")
+                except Exception as ex:
+                    st.error(f"Erreur d'écriture en base : {ex}")
+            else:
+                st.warning("Analyse effectuée, mais non enregistrée (Base déconnectée).")
 
 st.markdown("---")
 
