@@ -10,12 +10,12 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS CYBERPUNK / SOC AVANCÉ + MASQUAGE DE LA BARRE STREAMLIT ---
+# --- STYLE CSS CYBERPUNK / SOC AVANCÉ ---
 st.markdown("""
     <style>
-    /* Masque complètement la barre supérieure de Streamlit Cloud (Share, GitHub, etc.) */
+    /* Intègre l'en-tête dans le thème sombre pour garder le bouton de la sidebar visible */
     [data-testid="stHeader"] {
-        display: none;
+        background-color: #05050a;
     }
     
     /* Fond général sombre type terminal */
@@ -146,7 +146,7 @@ if st.button("Lancer l'analyse de sécurité", type="primary"):
                         "risk_level": niveau_risque,
                         "malicious_count": nb_malveillants,
                         "suspicious_count": nb_suspects,
-                        "user_email": current_session  # Isolation RLS invisible
+                        "user_email": current_session
                     }
                     supabase.table("analyses").insert(data_to_insert).execute()
                     st.success("Cible analysée et consignée dans le registre sécurisé.")
@@ -187,7 +187,7 @@ if supabase_connected:
             
             st.dataframe(table_data, use_container_width=True, hide_index=True)
         else:
-            st.info("Aucun journal actif pour cette session. Lancez une analyse ci-dessus.")
+            st.info("Aucun journal actif pour هذه session. Lancez une analyse ci-dessus.")
             
     except Exception as e:
         st.error(f"Erreur de lecture du registre : {e}")
