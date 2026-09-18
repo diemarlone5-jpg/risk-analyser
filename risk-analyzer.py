@@ -5,10 +5,61 @@ from supabase import create_client, Client
 
 # Configuration de la page Streamlit
 st.set_page_config(
-    page_title="URL Risk Analyzer - SOC",
-    page_icon="🛡️",
+    page_title="URL Risk Analyzer | Cyberpunk SOC",
+    page_icon="⚡",
     layout="wide"
 )
+
+# --- STYLE CSS CYBERPUNK / SOC AVANCÉ ---
+st.markdown("""
+    <style>
+    /* Fond général sombre type terminal */
+    .stApp {
+        background-color: #05050a;
+        color: #00ffcc;
+    }
+    
+    /* Barre latérale lookée cyberpunk */
+    [data-testid="stSidebar"] {
+        background-color: #080c14;
+        border-right: 1px solid #00ffcc33;
+    }
+
+    /* Champs de saisie stylisés néon */
+    .stTextInput input {
+        background-color: #0b0f19;
+        color: #00ffcc;
+        border: 1px solid #00ffcc66;
+        border-radius: 4px;
+    }
+    .stTextInput input:focus {
+        border-color: #00ffcc;
+        box-shadow: 0 0 10px #00ffcc33;
+    }
+
+    /* Boutons d'action néon */
+    .stButton button {
+        background: linear-gradient(90deg, #0077ff, #00ffcc);
+        color: #05050a;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    .stButton button:hover {
+        box-shadow: 0 0 15px #00ffccaa;
+        transform: translateY(-1px);
+    }
+
+    /* Titres et en-têtes */
+    h1, h2, h3 {
+        color: #00ffcc !important;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- GESTION D'UN IDENTIFIANT DE SESSION INVISIBLE (RLS par utilisateur) ---
 if "session_id" not in st.session_state:
@@ -31,49 +82,49 @@ vt_active = bool(VT_API_KEY)
 
 # --- BARRE LATÉRALE (SIDEBAR) ---
 with st.sidebar:
-    st.markdown("### 🛡️ TERMINAL SOC")
-    st.caption("Cyber-renseignement et cyberdéfense")
+    st.markdown("### ⚡ CYBER-SOC TERMINAL")
+    st.caption("Protocole de Threat Intelligence")
     
     st.markdown("---")
-    st.markdown("### 📊 État du système")
+    st.markdown("#### 📊 STATUT SYSTÈME")
     
     if supabase_connected:
-        st.success("Supabase : Connecté")
+        st.success("Supabase : ONLINE")
     else:
-        st.error("Supabase : Erreur de connexion")
+        st.error("Supabase : OFFLINE")
         
     if vt_active:
-        st.success("API VirusTotal : Actif")
+        st.success("VirusTotal API : ACTIVE")
     else:
-        st.warning("API VirusTotal : Inactif")
+        st.warning("VirusTotal API : INACTIVE")
 
     st.markdown("---")
-    st.markdown("### 📖 Guide des Niveaux")
-    st.markdown("🟢 **SÛR** : Aucun risque.")
-    st.markdown("🟡 **SUSPECT** : Signaux douteux.")
-    st.markdown("🔴 **DANGEROUS** : Menace détectée.")
+    st.markdown("#### 📖 MATRICE DE MENACE")
+    st.markdown("🟢 **SÛR** : Zéro compromission.")
+    st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
+    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
 
 # --- INTERFACE PRINCIPALE ---
-st.markdown("# 🛡️ Analyseur de risques d'URL")
-st.markdown("Surveillance SOC en temps réel : Analyse d'URL.")
+st.markdown("# ⚡ URL RISK ANALYZER [SOC EDITION]")
+st.markdown("Interface de surveillance et de rétro-ingénierie des flux web en temps réel.")
 
 st.markdown("---")
 
-st.markdown("### 🔍 Lancer une enquête de vulnérabilité")
+st.markdown("### 🔍 INITIATION D'UNE ENQUÊTE")
 
-# Champ unique pour l'URL avec placeholder (sans bouton radio)
+# Champ unique pour l'URL avec placeholder pro
 input_value = st.text_input(
-    "Entrez l'URL complète à analyser :", 
+    "Cible de l'analyse (URL) :", 
     value="", 
-    placeholder="https://exemple.com/path"
+    placeholder="https://exemple.com/path/suspect"
 )
 
 # Bouton de lancement de l'analyse
 if st.button("Lancer l'analyse de sécurité", type="primary"):
     if not input_value:
-        st.error("⚠️ Veuillez entrer une URL à analyser.")
+        st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
     else:
-        with st.spinner("Analyse en cours via VirusTotal et enregistrement..."):
+        with st.spinner("Exécution des sondes VirusTotal & consignation des logs..."):
             niveau_risque = "SÛR"
             nb_malveillants = 0
             nb_suspects = 0
@@ -90,23 +141,22 @@ if st.button("Lancer l'analyse de sécurité", type="primary"):
                         "risk_level": niveau_risque,
                         "malicious_count": nb_malveillants,
                         "suspicious_count": nb_suspects,
-                        "user_email": current_session  # Isole les lignes par session utilisateur en arrière-plan
+                        "user_email": current_session  # Isolation RLS invisible
                     }
                     supabase.table("analyses").insert(data_to_insert).execute()
-                    st.success("Analyse enregistrée avec succès !")
+                    st.success("Cible analysée et consignée dans le registre sécurisé.")
                 except Exception as ex:
-                    st.error(f"Erreur d'enregistrement : {ex}")
+                    st.error(f"Erreur d'écriture en base : {ex}")
             else:
-                st.warning("Analyse effectuée, mais non enregistrée (Supabase déconnecté).")
+                st.warning("Analyse effectuée, mais non enregistrée (Base déconnectée).")
 
 st.markdown("---")
 
 # --- TABLEAU DES JOURNAUX (Isolé par utilisateur) ---
-st.markdown("### 📜 Journaux d'Analyse en Direct (Supabase)")
+st.markdown("### 📜 REGISTRE DES AUDITS DE SESSION")
 
 if supabase_connected:
     try:
-        # Récupération filtrée uniquement sur l'utilisateur actuel en arrière-plan
         response = supabase.table("analyses") \
             .select("*") \
             .eq("user_email", current_session) \
@@ -123,18 +173,18 @@ if supabase_connected:
                     date_str = date_str.replace("T", " ")[:19]
                     
                 table_data.append({
-                    "Date & Heure": date_str,
+                    "Horodatage": date_str,
                     "Cible Analysée": log.get("input_url") or log.get("url"),
                     "Niveau de Risque": log.get("risk_level"),
-                    "Malveillants": log.get("malicious_count"),
-                    "Suspects": log.get("suspicious_count")
+                    "Moteurs Malveillants": log.get("malicious_count"),
+                    "Moteurs Suspects": log.get("suspicious_count")
                 })
             
-            st.dataframe(table_data, use_container_width=True)
+            st.dataframe(table_data, use_container_width=True, hide_index=True)
         else:
-            st.info("Aucun historique pour le moment. Lancez une première analyse ci-dessus !")
+            st.info("Aucun journal actif pour cette session. Lancez une analyse ci-dessus.")
             
     except Exception as e:
-        st.error(f"Impossible de charger les journaux : {e}")
+        st.error(f"Erreur de lecture du registre : {e}")
 else:
-    st.info("Veuillez connecter Supabase.")
+    st.info("Connexion Supabase requise pour afficher les journaux.")
