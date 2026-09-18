@@ -3,64 +3,64 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit
+# Configuration de la page Streamlit avec un logo et titre orientés SOC
 st.set_page_config(
-    page_title="URL Risk Analyzer | Cyberpunk SOC",
-    page_icon="⚡",
+    page_title="CyberGuard | URL Risk Analyzer",
+    page_icon="🛡️",
     layout="wide"
 )
 
-# --- STYLE CSS CYBERPUNK / SOC AVANCÉ ---
+# --- STYLE CSS PERSONNALISÉ : FOND NOIR & ACCENTS BLEUS CYBERPUNK ---
 st.markdown("""
     <style>
-    /* Intègre l'en-tête dans le thème sombre pour garder le bouton de la sidebar visible */
+    /* Intègre l'en-tête dans le thème noir pour garder le bouton de la sidebar visible */
     [data-testid="stHeader"] {
-        background-color: #05050a;
+        background-color: #000000;
     }
     
-    /* Fond général sombre type terminal */
+    /* Fond général de l'application en noir pur */
     .stApp {
-        background-color: #05050a;
-        color: #00ffcc;
+        background-color: #000000;
+        color: #e0f2fe;
     }
     
-    /* Barre latérale lookée cyberpunk */
+    /* Barre latérale (sidebar) en bleu nuit profond */
     [data-testid="stSidebar"] {
-        background-color: #080c14;
-        border-right: 1px solid #00ffcc33;
+        background-color: #050b14;
+        border-right: 1px solid #0077ff55;
     }
 
-    /* Champs de saisie stylisés néon */
+    /* Champs de saisie stylisés néon bleu */
     .stTextInput input {
-        background-color: #0b0f19;
-        color: #00ffcc;
-        border: 1px solid #00ffcc66;
-        border-radius: 4px;
+        background-color: #0a1120;
+        color: #38bdf8;
+        border: 1px solid #0077ff88;
+        border-radius: 6px;
     }
     .stTextInput input:focus {
-        border-color: #00ffcc;
-        box-shadow: 0 0 10px #00ffcc33;
+        border-color: #00d2ff;
+        box-shadow: 0 0 12px #00d2ff55;
     }
 
-    /* Boutons d'action néon */
+    /* Boutons d'action en dégradé de bleu professionnel */
     .stButton button {
-        background: linear-gradient(90deg, #0077ff, #00ffcc);
-        color: #05050a;
+        background: linear-gradient(90deg, #0284c7, #00d2ff);
+        color: #000000;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 1px;
         transition: all 0.3s ease;
     }
     .stButton button:hover {
-        box-shadow: 0 0 15px #00ffccaa;
+        box-shadow: 0 0 15px #00d2ffaa;
         transform: translateY(-1px);
     }
 
-    /* Titres et en-têtes */
+    /* Titres et en-têtes en bleu lumineux */
     h1, h2, h3 {
-        color: #00ffcc !important;
+        color: #38bdf8 !important;
         font-family: 'Courier New', Courier, monospace;
     }
     </style>
@@ -81,14 +81,14 @@ try:
 except Exception as e:
     supabase_connected = False
 
-# Lecture de la clé avec ton nom de variable (VT_API_KEY)
+# Lecture de la clé VirusTotal
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- BARRE LATÉRALE (SIDEBAR) ---
+# --- BARRE LATÉRALE (SIDEBAR) AVEC LOGO & STATUT ---
 with st.sidebar:
-    st.markdown("### ⚡ CYBER-SOC TERMINAL")
-    st.caption("Protocole de Threat Intelligence")
+    st.markdown("### 🛡️ CYBERGUARD SOC")
+    st.caption("Threat Intelligence & Risk Engine")
     
     st.markdown("---")
     st.markdown("#### 📊 STATUT SYSTÈME")
@@ -109,10 +109,14 @@ with st.sidebar:
     st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
     st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
 
-# --- INTERFACE PRINCIPALE ---
-st.markdown("# ⚡ URL RISK ANALYZER [SOC EDITION]")
-st.markdown("Interface de surveillance et de rétro-ingénierie des flux web en temps réel.")
+# --- EN-TÊTE PRINCIPAL AVEC LOGO VISUEL ---
+col_logo, col_title = st.columns([0.1, 0.9])
+with col_logo:
+    st.markdown("# 🛡️")
+with col_title:
+    st.markdown("# URL RISK ANALYZER [SOC EDITION]")
 
+st.markdown("Plateforme avancée de rétro-ingénierie et de surveillance des flux web en temps réel.")
 st.markdown("---")
 
 st.markdown("### 🔍 INITIATION D'UNE ENQUÊTE")
@@ -187,7 +191,7 @@ if supabase_connected:
             
             st.dataframe(table_data, use_container_width=True, hide_index=True)
         else:
-            st.info("Aucun journal actif pour هذه session. Lancez une analyse ci-dessus.")
+            st.info("Aucun journal actif pour cette session. Lancez une analyse ci-dessus.")
             
     except Exception as e:
         st.error(f"Erreur de lecture du registre : {e}")
