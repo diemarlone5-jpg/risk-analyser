@@ -3,46 +3,49 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit avec un logo et titre orientés SOC
+# Configuration de la page Streamlit
 st.set_page_config(
-    page_title="URL Risk Analyzer",
+    page_title="URL Risk Analyzer | SOC Dashboard",
     page_icon="🛡️",
     layout="wide"
 )
 
-# --- STYLE CSS PERSONNALISÉ : FOND NOIR & ACCENTS BLEUS CYBERPUNK ---
+# --- STYLE CSS AVANCÉ : EFFET CARDS & DESIGN SOC ---
 st.markdown("""
     <style>
-    /* Intègre l'en-tête dans le thème noir pour garder le bouton de la sidebar visible */
     [data-testid="stHeader"] {
         background-color: #000000;
     }
-    
-    /* Fond général de l'application en noir pur */
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
     }
-    
-    /* Barre latérale (sidebar) en bleu nuit profond */
     [data-testid="stSidebar"] {
         background-color: #050b14;
-        border-right: 1px solid #0077ff55;
+        border-right: 1px solid #0077ff33;
+    }
+    
+    /* Style des conteneurs en mode "Cartes Cyberpunk" */
+    .soc-card {
+        background-color: #050b14;
+        border: 1px solid #0077ff44;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0, 119, 255, 0.05);
+        margin-bottom: 20px;
     }
 
-    /* Champs de saisie stylisés néon bleu */
     .stTextInput input {
-        background-color: #0a1120;
+        background-color: #020617;
         color: #38bdf8;
-        border: 1px solid #0077ff88;
+        border: 1px solid #0077ff77;
         border-radius: 6px;
     }
     .stTextInput input:focus {
         border-color: #00d2ff;
-        box-shadow: 0 0 12px #00d2ff55;
+        box-shadow: 0 0 10px #00d2ff44;
     }
 
-    /* Boutons d'action en dégradé de bleu professionnel */
     .stButton button {
         background: linear-gradient(90deg, #0284c7, #00d2ff);
         color: #000000;
@@ -51,6 +54,7 @@ st.markdown("""
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 1px;
+        width: 100%;
         transition: all 0.3s ease;
     }
     .stButton button:hover {
@@ -58,7 +62,6 @@ st.markdown("""
         transform: translateY(-1px);
     }
 
-    /* Titres et en-têtes en bleu lumineux */
     h1, h2, h3 {
         color: #38bdf8 !important;
         font-family: 'Courier New', Courier, monospace;
@@ -66,13 +69,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- GESTION D'UN IDENTIFIANT DE SESSION INVISIBLE (RLS par utilisateur) ---
+# --- GESTION DE SESSION ---
 if "session_id" not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
 
 current_session = st.session_state.session_id
 
-# --- CONFIGURATION SUPABASE & API ---
+# --- SUPABASE & API ---
 try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -81,27 +84,18 @@ try:
 except Exception as e:
     supabase_connected = False
 
-# Lecture de la clé VirusTotal
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- BARRE LATÉRALE (SIDEBAR) AVEC LOGO & STATUT ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
     
     st.markdown("---")
     st.markdown("#### 📊 STATUT SYSTÈME")
-    
-    if supabase_connected:
-        st.success("Supabase : ONLINE")
-    else:
-        st.error("Supabase : OFFLINE")
-        
-    if vt_active:
-        st.success("VirusTotal API : ACTIVE")
-    else:
-        st.warning("VirusTotal API : INACTIVE")
+    st.success("Supabase : ONLINE" if supabase_connected else "Supabase : OFFLINE")
+    st.success("VirusTotal API : ACTIVE" if vt_active else "VirusTotal API : INACTIVE")
 
     st.markdown("---")
     st.markdown("#### 📖 MATRICE DE MENACE")
@@ -109,8 +103,8 @@ with st.sidebar:
     st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
     st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
 
-# --- EN-TÊTE PRINCIPAL AVEC LOGO VISUEL ---
-col_logo, col_title = st.columns([0.1, 0.9])
+# --- EN-TÊTE ---
+col_logo, col_title = st.columns([0.08, 0.92])
 with col_logo:
     st.markdown("# 🛡️")
 with col_title:
@@ -119,49 +113,56 @@ with col_title:
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
+# --- SECTION ENQUÊTE DANS UNE CARTE DESIGN ---
 st.markdown("### 🔍 INITIATION D'UNE ENQUÊTE")
 
-# Champ unique pour l'URL avec placeholder pro
-input_value = st.text_input(
-    "Cible de l'analyse (URL) :", 
-    value="", 
-    placeholder="https://exemple.com/path/suspect"
-)
+with st.container():
+    st.markdown('<div class="soc-card">', unsafe_allow_html=True)
+    
+    input_value = st.text_input(
+        "Cible de l'analyse (URL) :", 
+        value="", 
+        placeholder="https://exemple.com/path/suspect"
+    )
 
-# Bouton de lancement de l'analyse
-if st.button("Lancer l'analyse de sécurité", type="primary"):
-    if not input_value:
-        st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
-    else:
-        with st.spinner("Exécution des sondes VirusTotal & consignation des logs..."):
-            niveau_risque = "SÛR"
-            nb_malveillants = 0
-            nb_suspects = 0
-            
-            if "eicar" in input_value.lower() or "hacker" in input_value.lower():
-                niveau_risque = "DANGEROUS"
-                nb_malveillants = 1
+    col_btn1, col_btn2 = st.columns([1, 2])
+    with col_btn1:
+        analyze_clicked = st.button("Lancer l'analyse", type="primary")
 
-            # Enregistrement dans Supabase avec la session invisible
-            if supabase_connected:
-                try:
-                    data_to_insert = {
-                        "input_url": input_value,
-                        "risk_level": niveau_risque,
-                        "malicious_count": nb_malveillants,
-                        "suspicious_count": nb_suspects,
-                        "user_email": current_session
-                    }
-                    supabase.table("analyses").insert(data_to_insert).execute()
-                    st.success("Cible analysée et consignée dans le registre sécurisé.")
-                except Exception as ex:
-                    st.error(f"Erreur d'écriture en base : {ex}")
-            else:
-                st.warning("Analyse effectuée, mais non enregistrée (Base déconnectée).")
+    if analyze_clicked:
+        if not input_value:
+            st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
+        else:
+            with st.spinner("Exécution des sondes VirusTotal & consignation des logs..."):
+                niveau_risque = "SÛR"
+                nb_malveillants = 0
+                nb_suspects = 0
+                
+                if "eicar" in input_value.lower() or "hacker" in input_value.lower():
+                    niveau_risque = "DANGEROUS"
+                    nb_malveillants = 1
+
+                if supabase_connected:
+                    try:
+                        data_to_insert = {
+                            "input_url": input_value,
+                            "risk_level": niveau_risque,
+                            "malicious_count": nb_malveillants,
+                            "suspicious_count": nb_suspects,
+                            "user_email": current_session
+                        }
+                        supabase.table("analyses").insert(data_to_insert).execute()
+                        st.success("Cible analysée et consignée dans le registre sécurisé.")
+                    except Exception as ex:
+                        st.error(f"Erreur d'écriture en base : {ex}")
+                else:
+                    st.warning("Analyse effectuée, mais non enregistrée (Base déconnectée).")
+                    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
-# --- TABLEAU DES JOURNAUX (Isolé par utilisateur) ---
+# --- TABLEAU DES JOURNAUX ---
 st.markdown("### 📜 REGISTRE DES AUDITS DE SESSION")
 
 if supabase_connected:
