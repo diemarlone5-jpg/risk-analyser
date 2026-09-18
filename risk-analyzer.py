@@ -25,7 +25,7 @@ try:
 except Exception as e:
     supabase_connected = False
 
-# Lecture correcte de la clé avec ton nom de variable (VT_API_KEY)
+# Lecture de la clé avec ton nom de variable (VT_API_KEY)
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
@@ -67,10 +67,19 @@ analysis_type = st.radio(
     ["URL complète", "Adresse Email (Extraction de domaine)"]
 )
 
+# Utilisation des placeholders pour un rendu propre
 if analysis_type == "URL complète":
-    input_value = st.text_input("Entrez l'URL complète :", "https://exemple.com/path")
+    input_value = st.text_input(
+        "Entrez l'URL complète :", 
+        value="", 
+        placeholder="https://exemple.com/path"
+    )
 else:
-    input_value = st.text_input("Entrez l'adresse email :", "exemple@domaine.com")
+    input_value = st.text_input(
+        "Entrez l'adresse email :", 
+        value="", 
+        placeholder="exemple@domaine.com"
+    )
 
 # Bouton de lancement de l'analyse
 if st.button("Lancer l'analyse de sécurité", type="primary"):
