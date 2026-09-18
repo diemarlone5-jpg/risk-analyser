@@ -55,36 +55,23 @@ with st.sidebar:
 
 # --- INTERFACE PRINCIPALE ---
 st.markdown("# 🛡️ Analyseur de risques d'URL")
-st.markdown("Surveillance SOC en temps réel : Analyse d'URL et extraction de domaines par e-mail.")
+st.markdown("Surveillance SOC en temps réel : Analyse d'URL.")
 
 st.markdown("---")
 
 st.markdown("### 🔍 Lancer une enquête de vulnérabilité")
 
-# Options de l'interface d'origine
-analysis_type = st.radio(
-    "Sélectionnez le type d'entrée à analyser :",
-    ["URL complète", "Adresse Email (Extraction de domaine)"]
+# Champ unique pour l'URL avec placeholder (sans bouton radio)
+input_value = st.text_input(
+    "Entrez l'URL complète à analyser :", 
+    value="", 
+    placeholder="https://exemple.com/path"
 )
-
-# Utilisation des placeholders pour un rendu propre
-if analysis_type == "URL complète":
-    input_value = st.text_input(
-        "Entrez l'URL complète :", 
-        value="", 
-        placeholder="https://exemple.com/path"
-    )
-else:
-    input_value = st.text_input(
-        "Entrez l'adresse email :", 
-        value="", 
-        placeholder="exemple@domaine.com"
-    )
 
 # Bouton de lancement de l'analyse
 if st.button("Lancer l'analyse de sécurité", type="primary"):
     if not input_value:
-        st.error("⚠️ Veuillez entrer une valeur à analyser.")
+        st.error("⚠️ Veuillez entrer une URL à analyser.")
     else:
         with st.spinner("Analyse en cours via VirusTotal et enregistrement..."):
             niveau_risque = "SÛR"
