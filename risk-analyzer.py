@@ -5,7 +5,7 @@ from supabase import create_client, Client
 
 # Configuration de la page Streamlit avec un logo et titre orientés SOC
 st.set_page_config(
-    page_title="CyberGuard | URL Risk Analyzer",
+    page_title="URL Risk Analyzer",
     page_icon="🛡️",
     layout="wide"
 )
@@ -87,7 +87,7 @@ vt_active = bool(VT_API_KEY)
 
 # --- BARRE LATÉRALE (SIDEBAR) AVEC LOGO & STATUT ---
 with st.sidebar:
-    st.markdown("### 🛡️ CYBERGUARD SOC")
+    st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
     
     st.markdown("---")
@@ -114,7 +114,7 @@ col_logo, col_title = st.columns([0.1, 0.9])
 with col_logo:
     st.markdown("# 🛡️")
 with col_title:
-    st.markdown("# URL RISK ANALYZER [SOC EDITION]")
+    st.markdown("# URL RISK ANALYZER")
 
 st.markdown("Plateforme avancée de rétro-ingénierie et de surveillance des flux web en temps réel.")
 st.markdown("---")
