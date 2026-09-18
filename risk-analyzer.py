@@ -116,7 +116,7 @@ with col_logo:
 with col_title:
     st.markdown("# URL RISK ANALYZER")
 
-st.markdown("Plateforme avancée de rétro-ingénierie et de surveillance des flux web en temps réel.")
+st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
 st.markdown("### 🔍 INITIATION D'UNE ENQUÊTE")
