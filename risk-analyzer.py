@@ -10,9 +10,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS CYBERPUNK / SOC AVANCÉ ---
+# --- STYLE CSS CYBERPUNK / SOC AVANCÉ + MASQUAGE DE LA BARRE STREAMLIT ---
 st.markdown("""
     <style>
+    /* Masque complètement la barre supérieure de Streamlit Cloud (Share, GitHub, etc.) */
+    [data-testid="stHeader"] {
+        display: none;
+    }
+    
     /* Fond général sombre type terminal */
     .stApp {
         background-color: #05050a;
