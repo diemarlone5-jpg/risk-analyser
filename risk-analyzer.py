@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS PROPRE ET HARMONISÉ ---
+# --- STYLE CSS AVANCÉ : VISIBILITÉ MAXIMALE DES MÉTRIQUES & CARTES ---
 st.markdown("""
     <style>
     [data-testid="stHeader"] {
@@ -23,6 +23,24 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background-color: #050b14;
         border-right: 1px solid #0077ff33;
+    }
+
+    /* Style ultra-visible pour les blocs de métriques (KPIs) */
+    [data-testid="stMetric"] {
+        background-color: #050b14;
+        border: 1px solid #0077ff88;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+    }
+    [data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-weight: bold;
+    }
+    [data-testid="stMetricValue"] {
+        color: #00d2ff !important;
+        font-family: 'Courier New', Courier, monospace;
+        text-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
     }
 
     /* Champs de saisie stylisés néon bleu */
@@ -92,7 +110,7 @@ with st.sidebar:
     st.markdown("#### 📖 MATRICE DE MENACE")
     st.markdown("🟢 **SÛR** : Zéro compromission.")
     st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
-    st.markdown("🔴 **DANGEREUX** : Attracteur malveillant.")
+    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
 
 # --- EN-TÊTE DE L'APPLICATION ---
 col_logo, col_title = st.columns([0.08, 0.92])
@@ -104,7 +122,7 @@ with col_title:
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
-# --- SECTION TABLEAU DE BORD / KPI (Corrigé : "Stable" au lieu de "Écurie") ---
+# --- SECTION TABLEAU DE BORD / KPI (Bien visibles en cartes lumineuses) ---
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label="Moteur d'Audit", value="ACTIF", delta="Stable")
@@ -135,7 +153,7 @@ with st.container(border=True):
                 nb_suspects = 0
                 
                 if "eicar" in input_value.lower() or "hacker" in input_value.lower():
-                    niveau_risque = "DANGEREUX"
+                    niveau_risque = "DANGEROUS"
                     nb_malveillants = 1
 
                 if supabase_connected:
