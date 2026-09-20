@@ -11,20 +11,37 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS PROPRE (SANS CASSER LA SIDEBAR NI LE HEADER) ---
+# --- STYLE CSS : VERROUILLAGE TOTAL DE LA SIDEBAR ET SUPPRESSION DE LA FLÈCHE ---
 st.markdown("""
     <style>
+    /* Supprime définitivement la flèche et le bouton pour fermer la sidebar */
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+    
+    /* Force la barre latérale à rester fixe, ouverte et visible */
+    [data-testid="stSidebar"] {
+        display: block !important;
+        visibility: visible !important;
+        transform: none !important;
+        width: 300px !important;
+        background-color: #050b14 !important;
+        border-right: 1px solid #0077ff44 !important;
+    }
+
+    /* Empêche la sidebar de se replier */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(0px) !important;
+        margin-left: 0px !important;
+    }
+
     /* Fond global de l'application en noir */
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
     }
     
-    /* Style de la barre latérale à gauche */
-    [data-testid="stSidebar"] {
-        background-color: #050b14 !important;
-        border-right: 1px solid #0077ff44 !important;
-    }
+    /* Style du texte dans la barre latérale */
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
         color: #cbd5e1 !important;
     }
@@ -103,7 +120,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- BARRE LATÉRALE À GAUCHE ---
+# --- BARRE LATÉRALE FIXE À GAUCHE ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Renseignements sur les menaces en entreprise")
