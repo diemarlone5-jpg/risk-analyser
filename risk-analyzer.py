@@ -5,12 +5,12 @@ from supabase import create_client, Client
 
 # Configuration de la page Streamlit
 st.set_page_config(
-    page_title="URL Risk Analyzer | Enterprise SOC",
+    page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
     layout="wide"
 )
 
-# --- STYLE CSS PROPRE ET SANS RISQUE DE BUG ---
+# --- STYLE CSS PROPRE ET HARMONISÉ ---
 st.markdown("""
     <style>
     [data-testid="stHeader"] {
@@ -81,30 +81,30 @@ vt_active = bool(VT_API_KEY)
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
-    st.caption("Enterprise Threat Intelligence")
+    st.caption("Threat Intelligence & Risk Engine")
     
     st.markdown("---")
     st.markdown("#### 📊 STATUT SYSTÈME")
-    st.success("Supabase : ONLINE" if supabase_connected else "Supabase : OFFLINE")
-    st.success("VirusTotal API : ACTIVE" if vt_active else "VirusTotal API : INACTIVE")
+    st.success("Supabase : EN LIGNE" if supabase_connected else "Supabase : HORS LIGNE")
+    st.success("API VirusTotal : ACTIVE" if vt_active else "API VirusTotal : INACTIVE")
 
     st.markdown("---")
     st.markdown("#### 📖 MATRICE DE MENACE")
     st.markdown("🟢 **SÛR** : Zéro compromission.")
     st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
-    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
+    st.markdown("🔴 **DANGEREUX** : Attracteur malveillant.")
 
 # --- EN-TÊTE DE L'APPLICATION ---
 col_logo, col_title = st.columns([0.08, 0.92])
 with col_logo:
     st.markdown("# 🛡️")
 with col_title:
-    st.markdown("# URL RISK ANALYZER")
+    st.markdown("# ANALYSE DES RISQUES D'URL")
 
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
-# --- SECTION TABLEAU DE BORD / KPI (Style Entreprise) ---
+# --- SECTION TABLEAU DE BORD / KPI (Corrigé : "Stable" au lieu de "Écurie") ---
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label="Moteur d'Audit", value="ACTIF", delta="Stable")
@@ -135,7 +135,7 @@ with st.container(border=True):
                 nb_suspects = 0
                 
                 if "eicar" in input_value.lower() or "hacker" in input_value.lower():
-                    niveau_risque = "DANGEROUS"
+                    niveau_risque = "DANGEREUX"
                     nb_malveillants = 1
 
                 if supabase_connected:
