@@ -3,29 +3,19 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit (barre repliée par défaut)
+# Configuration de la page Streamlit
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : SUPPRESSION TOTALE DE LA BARRE LATÉRALE ---
+# --- STYLE CSS : SUPPRESSION DE LA BARRE BLANCHE DU HAUT ---
 st.markdown("""
     <style>
-    /* Cache complètement la barre latérale et son bouton de contrôle */
-    [data-testid="stSidebar"] {
-        display: none !important;
-    }
-    [data-testid="collapsedControl"] {
-        display: none !important;
-    }
-    
-    /* Cache uniquement les boutons de partage et l'en-tête supérieur inutile */
-    header [data-testid="stToolbar"],
-    .stDeployButton,
-    [data-testid="stStatusWidget"] {
+    /* Supprime définitivement la barre/en-tête blanche tout en haut */
+    header[data-testid="stHeader"] {
         display: none !important;
     }
     
@@ -105,6 +95,22 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
+# --- BARRE LATÉRALE ---
+with st.sidebar:
+    st.markdown("### 🛡️ URL RISK ANALYZER")
+    st.caption("Threat Intelligence & Risk Engine")
+    
+    st.markdown("---")
+    st.markdown("#### 📊 STATUT SYSTÈME")
+    st.success("Supabase : EN LIGNE" if supabase_connected else "Supabase : HORS LIGNE")
+    st.success("API VirusTotal : ACTIVE" if vt_active else "API VirusTotal : INACTIVE")
+
+    st.markdown("---")
+    st.markdown("#### 📖 MATRICE DE MENACE")
+    st.markdown("🟢 **SÛR** : Zéro compromission.")
+    st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
+    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
+
 # --- EN-TÊTE DE L'APPLICATION ---
 col_logo, col_title = st.columns([0.08, 0.92])
 with col_logo:
@@ -115,15 +121,7 @@ with col_title:
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
-# --- SECTION TABLEAU DE BORD / KPI (Intégration du statut système ici puisque la sidebar est supprimée) ---
-col_stat1, col_stat2 = st.columns(2)
-with col_stat1:
-    st.info("🟢 Supabase : EN LIGNE" if supabase_connected else "🔴 Supabase : HORS LIGNE")
-with col_stat2:
-    st.info("🟢 API VirusTotal : ACTIVE" if vt_active else "🔴 API VirusTotal : INACTIVE")
-
-st.markdown("---")
-
+# --- SECTION TABLEAU DE BORD / KPI ---
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label="Moteur d'Audit", value="ACTIF", delta="Stable")
