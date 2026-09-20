@@ -3,18 +3,23 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit
+# Configuration de la page avec la barre latérale forcée ouverte
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS STABLE & PROANALYSE ---
+# --- STYLE CSS CORRIGÉ : PANNEAU SOC FIXE ET STABLE ---
 st.markdown("""
     <style>
-    /* Masque entièrement la barre supérieure Streamlit */
-    [data-testid="stHeader"] {
+    /* Masque les boutons parasites de Streamlit tout en gardant le contrôle stable */
+    .stDeployButton {display: none !important;}
+    [data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
+    
+    /* Verrouille la barre latérale pour qu'elle ne se ferme plus par accident */
+    [data-testid="collapsedControl"] {
         display: none !important;
     }
     
@@ -23,7 +28,7 @@ st.markdown("""
         color: #e0f2fe;
     }
     
-    /* --- BARRE LATÉRALE --- */
+    /* --- BARRE LATÉRALE SOC --- */
     [data-testid="stSidebar"] {
         background-color: #050b14;
         border-right: 1px solid #0077ff44;
@@ -106,7 +111,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR (DOIT RESTER OUVERTE PENDANT LA DÉMO) ---
+# --- SIDEBAR FIXE ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
