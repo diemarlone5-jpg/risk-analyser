@@ -10,20 +10,36 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS AVANCÉ : MASQUAGE TOTAL DU HEADER STREAMLIT ---
+# --- STYLE CSS AVANCÉ : FIX DE LA FLÈCHE SIDEBAR & DESIGN SOC ---
 st.markdown("""
     <style>
-    /* Masque entièrement la barre supérieure Streamlit (Share, GitHub, etc.) */
+    /* Masque entièrement la barre supérieure Streamlit */
     [data-testid="stHeader"] {
         display: none !important;
     }
+    
+    /* Masque le badge flottant Streamlit en bas à droite */
+    .stDeployButton {display: none !important;}
+    [data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
     
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
     }
     
-    /* --- BARRE LATÉRALE OPTIMISÉE --- */
+    /* --- CORRECTION POUR LA FLÈCHE DE LA BARRE LATÉRALE --- */
+    /* Force le bouton de réduction/expansion de la sidebar à rester visible en permanence */
+    [data-testid="collapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        color: #38bdf8 !important;
+        background-color: #050b14 !important;
+        border: 1px solid #0077ff66 !important;
+        border-radius: 4px;
+        z-index: 999999;
+    }
+    
+    /* --- BARRE LATÉRALE --- */
     [data-testid="stSidebar"] {
         background-color: #050b14;
         border-right: 1px solid #0077ff44;
@@ -143,7 +159,7 @@ with col3:
 
 st.markdown("---")
 
-# --- SECTION ENQUÊTE DANS UNE CARTE NATIVE PROPRE ---
+# --- SECTION ENQUÊTE ---
 st.markdown("### 🔍 INITIATION D'UNE ENQUÊTE")
 
 with st.container(border=True):
@@ -162,9 +178,12 @@ with st.container(border=True):
                 nb_malveillants = 0
                 nb_suspects = 0
                 
-                if "eicar" in input_value.lower() or "hacker" in input_value.lower():
+                if "eicar" in input_value.lower() or "hacker" in input_value.lower() or "malware" in input_value.lower():
                     niveau_risque = "DANGEROUS"
                     nb_malveillants = 1
+                elif "login" in input_value.lower() or "secure" in input_value.lower():
+                    niveau_risque = "SUSPECT"
+                    nb_suspects = 1
 
                 if supabase_connected:
                     try:
@@ -176,7 +195,7 @@ with st.container(border=True):
                             "user_email": current_session
                         }
                         supabase.table("analyses").insert(data_to_insert).execute()
-                        st.success("Cible analysée et consignée dans le registre sécurisé.")
+                        st.success(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
                     except Exception as ex:
                         st.error(f"Erreur d'écriture en base : {ex}")
                 else:
