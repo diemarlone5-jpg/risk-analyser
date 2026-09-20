@@ -11,10 +11,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : SUPPRESSION DE LA BARRE BLANCHE DU HAUT ---
+# --- STYLE CSS : SUPPRIME UNIQUEMENT LA BARRE BLANCHE DU HAUT ET GARDE LA SIDEBAR ---
 st.markdown("""
     <style>
-    /* Supprime définitivement la barre/en-tête blanche tout en haut */
+    /* Supprime définitivement la barre blanche en haut de la page */
     header[data-testid="stHeader"] {
         display: none !important;
     }
@@ -22,6 +22,18 @@ st.markdown("""
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
+    }
+    
+    /* S'assure que la barre latérale est bien affichée et stylisée */
+    [data-testid="stSidebar"] {
+        background-color: #050b14 !important;
+        border-right: 1px solid #0077ff44 !important;
+    }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
+        color: #cbd5e1 !important;
+    }
+    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
+        color: #38bdf8 !important;
     }
 
     /* Style ultra-visible pour les blocs de métriques (KPIs) */
@@ -95,7 +107,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- BARRE LATÉRALE ---
+# --- BARRE LATÉRALE (IDENTIQUE À TON IMAGE) ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
