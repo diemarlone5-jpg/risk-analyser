@@ -11,27 +11,27 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS CORRIGÉ : PANNEAU SOC FIXE ET STABLE ---
+# --- STYLE CSS CORRIGÉ : RESTAURATION TOTALE DE LA BARRE DE GAUCHE ---
 st.markdown("""
     <style>
-    /* Masque les boutons parasites de Streamlit tout en gardant le contrôle stable */
-    .stDeployButton {display: none !important;}
-    [data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
-    
-    /* Verrouille la barre latérale pour qu'elle ne se ferme plus par accident */
-    [data-testid="collapsedControl"] {
+    /* Masque uniquement l'en-tête supérieur inutile de Streamlit */
+    [data-testid="stHeader"] {
         display: none !important;
     }
+    
+    /* Masque le badge de bas de page */
+    .stDeployButton {display: none !important;}
     
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
     }
     
-    /* --- BARRE LATÉRALE SOC --- */
+    /* --- BARRE LATÉRALE FORCÉE ET VISIBLE --- */
     [data-testid="stSidebar"] {
-        background-color: #050b14;
-        border-right: 1px solid #0077ff44;
+        background-color: #050b14 !important;
+        border-right: 1px solid #0077ff44 !important;
+        display: block !important;
     }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
         color: #cbd5e1 !important;
@@ -111,7 +111,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR FIXE ---
+# --- SIDEBAR (GARANTIE ET VISIBLE) ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
