@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit avec la barre latérale ouverte
+# Configuration de la page Streamlit
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
@@ -11,28 +11,38 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : MASQUE SEULEMENT LA BARRE BLANCHE DU HAUT ET GARDE LA SIDEBAR ---
+# --- STYLE CSS : MASQUE LE HAUT ET FORCE LA SIDEBAR À RESTER VISIBLE ET OUVERTE ---
 st.markdown("""
     <style>
-    /* Masque la barre de navigation supérieure de Streamlit (là où il y a Partager/GitHub) */
+    /* Masque la barre de navigation supérieure */
     header[data-testid="stHeader"] {
         display: none !important;
     }
     
-    /* Supprime l'espace vide laissé en haut par la suppression du header */
-    .stMainBlockContainer {
-        padding-top: 2rem !important;
+    /* Force l'affichage permanent de la barre latérale à gauche */
+    [data-testid="stSidebar"] {
+        display: block !important;
+        visibility: visible !important;
+        transform: none !important;
+        width: 300px !important;
+        background-color: #050b14 !important;
+        border-right: 1px solid #0077ff44 !important;
+    }
+
+    /* Empêche la sidebar de se replier même si l'attribut change */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(0px) !important;
+        margin-left: 0px !important;
+    }
+
+    /* Supprime le bouton de réduction de la sidebar puisqu'on veut qu'elle reste fixe */
+    [data-testid="collapsedControl"] {
+        display: none !important;
     }
 
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
-    }
-    
-    /* Style de la barre latérale pour qu'elle reste bien visible et fixe à gauche */
-    [data-testid="stSidebar"] {
-        background-color: #050b14 !important;
-        border-right: 1px solid #0077ff44 !important;
     }
 
     /* Style ultra-visible pour les blocs de métriques (KPIs) */
