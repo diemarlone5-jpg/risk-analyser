@@ -10,12 +10,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS AVANCÉ : FINITIONS ENTERPRISE ---
+# --- STYLE CSS AVANCÉ : MASQUAGE TOTAL DU HEADER STREAMLIT ---
 st.markdown("""
     <style>
+    /* Masque entièrement la barre supérieure Streamlit (Share, GitHub, etc.) */
     [data-testid="stHeader"] {
-        background-color: #000000;
+        display: none !important;
     }
+    
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
