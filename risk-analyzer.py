@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit (avec la barre latérale ouverte par défaut)
+# Configuration de la page Streamlit
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
@@ -11,9 +11,23 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS PROPRE (SANS MASQUER L'EN-TÊTE POUR GARDER LA FLÈCHE) ---
+# --- STYLE CSS : MASQUE UNIQUEMENT LES BOUTONS DU HAUT (SHARE, GITHUB, OPTIONS) ---
 st.markdown("""
     <style>
+    /* Cible spécifiquement la barre d'outils supérieure de Streamlit pour l'effacer */
+    [data-testid="stHeader"] {
+        background: transparent !important;
+        visibility: visible !important;
+    }
+    
+    /* Cache les éléments interactifs de l'en-tête (Share, Star, Edit, GitHub, Menu 3 points) */
+    [data-testid="stToolbar"], 
+    .stDeployButton, 
+    [data-testid="stStatusWidget"],
+    header[data-testid="stHeader"] > div:last-child {
+        display: none !important;
+    }
+    
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
