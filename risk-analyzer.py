@@ -11,10 +11,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : VERROUILLAGE TOTAL DE LA SIDEBAR ET SUPPRESSION DE LA FLÈCHE ---
+# --- STYLE CSS : MASQUE LE HEADER SUPÉRIEUR ET VERROUILLE LA SIDEBAR ---
 st.markdown("""
     <style>
-    /* Supprime définitivement la flèche et le bouton pour fermer la sidebar */
+    /* Masque complètement la barre supérieure (Share, GitHub, menu 3 points, etc.) */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    /* Supprime définitivement la flèche/bouton de réduction de la sidebar */
     [data-testid="collapsedControl"] {
         display: none !important;
     }
