@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS AVANCÉ : VISIBILITÉ TOTALE (PRINCIPAL & SIDEBAR) ---
+# --- STYLE CSS AVANCÉ : FINITIONS & VISIBILITÉ ---
 st.markdown("""
     <style>
     [data-testid="stHeader"] {
@@ -21,13 +21,13 @@ st.markdown("""
         color: #e0f2fe;
     }
     
-    /* --- STYLE DE LA BARRE LATÉRALE (VISIBILITÉ AMÉLIORÉE) --- */
+    /* --- BARRE LATÉRALE OPTIMISÉE --- */
     [data-testid="stSidebar"] {
         background-color: #050b14;
         border-right: 1px solid #0077ff44;
     }
-    /* Rend tous les textes et captions de la sidebar bien lumineux et lisibles */
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label {
+    /* Rend TOUS les textes, captions et descriptions de la sidebar bien lumineux */
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
         color: #cbd5e1 !important;
     }
     [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
@@ -105,7 +105,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR (Visibilité optimisée) ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
