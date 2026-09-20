@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit
+# Configuration de la page Streamlit avec la barre latérale ouverte
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
@@ -11,29 +11,28 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : SUPPRIME UNIQUEMENT LA BARRE BLANCHE DU HAUT ET GARDE LA SIDEBAR ---
+# --- STYLE CSS : MASQUE SEULEMENT LA BARRE BLANCHE DU HAUT ET GARDE LA SIDEBAR ---
 st.markdown("""
     <style>
-    /* Supprime définitivement la barre blanche en haut de la page */
+    /* Masque la barre de navigation supérieure de Streamlit (là où il y a Partager/GitHub) */
     header[data-testid="stHeader"] {
         display: none !important;
     }
     
+    /* Supprime l'espace vide laissé en haut par la suppression du header */
+    .stMainBlockContainer {
+        padding-top: 2rem !important;
+    }
+
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
     }
     
-    /* S'assure que la barre latérale est bien affichée et stylisée */
+    /* Style de la barre latérale pour qu'elle reste bien visible et fixe à gauche */
     [data-testid="stSidebar"] {
         background-color: #050b14 !important;
         border-right: 1px solid #0077ff44 !important;
-    }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
-        color: #cbd5e1 !important;
-    }
-    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
-        color: #38bdf8 !important;
     }
 
     /* Style ultra-visible pour les blocs de métriques (KPIs) */
@@ -107,10 +106,10 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- BARRE LATÉRALE (IDENTIQUE À TON IMAGE) ---
+# --- BARRE LATÉRALE ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
-    st.caption("Threat Intelligence & Risk Engine")
+    st.caption("Renseignements sur les menaces en entreprise")
     
     st.markdown("---")
     st.markdown("#### 📊 STATUT SYSTÈME")
