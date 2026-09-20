@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS AVANCÉ : FINITIONS & VISIBILITÉ ---
+# --- STYLE CSS AVANCÉ : FINITIONS ENTERPRISE ---
 st.markdown("""
     <style>
     [data-testid="stHeader"] {
@@ -26,7 +26,6 @@ st.markdown("""
         background-color: #050b14;
         border-right: 1px solid #0077ff44;
     }
-    /* Rend TOUS les textes, captions et descriptions de la sidebar bien lumineux */
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
         color: #cbd5e1 !important;
     }
@@ -219,3 +218,12 @@ if supabase_connected:
         st.error(f"Erreur de lecture du registre : {e}")
 else:
     st.info("Connexion Supabase requise pour afficher les journaux.")
+
+# --- PIED DE PAGE PROFESSIONNEL ---
+st.markdown("---")
+st.markdown(
+    "<p style='text-align: center; color: #475569; font-size: 0.85rem; font-family: monospace;'>"
+    "URL Risk Analyzer • Enterprise Security Dashboard v1.0 • Secure RLS Session Isolation"
+    "</p>", 
+    unsafe_allow_html=True
+)
