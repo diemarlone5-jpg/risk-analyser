@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS AVANCÉ : VISIBILITÉ MAXIMALE DES MÉTRIQUES & CARTES ---
+# --- STYLE CSS AVANCÉ : VISIBILITÉ TOTALE (PRINCIPAL & SIDEBAR) ---
 st.markdown("""
     <style>
     [data-testid="stHeader"] {
@@ -20,9 +20,18 @@ st.markdown("""
         background-color: #000000;
         color: #e0f2fe;
     }
+    
+    /* --- STYLE DE LA BARRE LATÉRALE (VISIBILITÉ AMÉLIORÉE) --- */
     [data-testid="stSidebar"] {
         background-color: #050b14;
-        border-right: 1px solid #0077ff33;
+        border-right: 1px solid #0077ff44;
+    }
+    /* Rend tous les textes et captions de la sidebar bien lumineux et lisibles */
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label {
+        color: #cbd5e1 !important;
+    }
+    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
+        color: #38bdf8 !important;
     }
 
     /* Style ultra-visible pour les blocs de métriques (KPIs) */
@@ -96,7 +105,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR ---
+# --- SIDEBAR (Visibilité optimisée) ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
@@ -122,7 +131,7 @@ with col_title:
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
-# --- SECTION TABLEAU DE BORD / KPI (Bien visibles en cartes lumineuses) ---
+# --- SECTION TABLEAU DE BORD / KPI ---
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label="Moteur d'Audit", value="ACTIF", delta="Stable")
