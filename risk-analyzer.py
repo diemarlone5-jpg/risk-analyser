@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit
+# Configuration de la page avec la barre latérale ouverte par défaut
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
@@ -11,38 +11,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : MASQUE LE HAUT ET FORCE LA SIDEBAR À RESTER VISIBLE ET OUVERTE ---
+# --- STYLE CSS PROPRE (SANS CASSER LA SIDEBAR NI LE HEADER) ---
 st.markdown("""
     <style>
-    /* Masque la barre de navigation supérieure */
-    header[data-testid="stHeader"] {
-        display: none !important;
-    }
-    
-    /* Force l'affichage permanent de la barre latérale à gauche */
-    [data-testid="stSidebar"] {
-        display: block !important;
-        visibility: visible !important;
-        transform: none !important;
-        width: 300px !important;
-        background-color: #050b14 !important;
-        border-right: 1px solid #0077ff44 !important;
-    }
-
-    /* Empêche la sidebar de se replier même si l'attribut change */
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        transform: translateX(0px) !important;
-        margin-left: 0px !important;
-    }
-
-    /* Supprime le bouton de réduction de la sidebar puisqu'on veut qu'elle reste fixe */
-    [data-testid="collapsedControl"] {
-        display: none !important;
-    }
-
+    /* Fond global de l'application en noir */
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
+    }
+    
+    /* Style de la barre latérale à gauche */
+    [data-testid="stSidebar"] {
+        background-color: #050b14 !important;
+        border-right: 1px solid #0077ff44 !important;
+    }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
+        color: #cbd5e1 !important;
+    }
+    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
+        color: #38bdf8 !important;
     }
 
     /* Style ultra-visible pour les blocs de métriques (KPIs) */
@@ -116,7 +103,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- BARRE LATÉRALE ---
+# --- BARRE LATÉRALE À GAUCHE ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Renseignements sur les menaces en entreprise")
