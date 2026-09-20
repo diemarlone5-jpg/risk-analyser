@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- STYLE CSS AVANCÉ : FIX DE LA FLÈCHE SIDEBAR & DESIGN SOC ---
+# --- STYLE CSS STABLE & PROANALYSE ---
 st.markdown("""
     <style>
     /* Masque entièrement la barre supérieure Streamlit */
@@ -18,25 +18,9 @@ st.markdown("""
         display: none !important;
     }
     
-    /* Masque le badge flottant Streamlit en bas à droite */
-    .stDeployButton {display: none !important;}
-    [data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
-    
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
-    }
-    
-    /* --- CORRECTION POUR LA FLÈCHE DE LA BARRE LATÉRALE --- */
-    /* Force le bouton de réduction/expansion de la sidebar à rester visible en permanence */
-    [data-testid="collapsedControl"] {
-        display: block !important;
-        visibility: visible !important;
-        color: #38bdf8 !important;
-        background-color: #050b14 !important;
-        border: 1px solid #0077ff66 !important;
-        border-radius: 4px;
-        z-index: 999999;
     }
     
     /* --- BARRE LATÉRALE --- */
@@ -122,7 +106,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR ---
+# --- SIDEBAR (DOIT RESTER OUVERTE PENDANT LA DÉMO) ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
