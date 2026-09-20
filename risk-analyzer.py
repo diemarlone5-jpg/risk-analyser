@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit
+# Configuration de la page Streamlit avec la barre latérale ouverte par défaut
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
@@ -11,20 +11,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : MASQUE UNIQUEMENT LES BOUTONS DU HAUT (SHARE, GITHUB, OPTIONS) ---
+# --- STYLE CSS : NETTOIE LE HAUT MAIS GARDE LA SIDEBAR INTACTE ---
 st.markdown("""
     <style>
-    /* Cible spécifiquement la barre d'outils supérieure de Streamlit pour l'effacer */
-    [data-testid="stHeader"] {
-        background: transparent !important;
-        visibility: visible !important;
-    }
-    
-    /* Cache les éléments interactifs de l'en-tête (Share, Star, Edit, GitHub, Menu 3 points) */
-    [data-testid="stToolbar"], 
-    .stDeployButton, 
-    [data-testid="stStatusWidget"],
-    header[data-testid="stHeader"] > div:last-child {
+    /* Cache uniquement les boutons de partage et l'icône GitHub en haut à droite */
+    header [data-testid="stToolbar"],
+    .stDeployButton,
+    [data-testid="stStatusWidget"] {
         display: none !important;
     }
     
@@ -33,10 +26,12 @@ st.markdown("""
         color: #e0f2fe;
     }
     
-    /* --- BARRE LATÉRALE --- */
+    /* --- GARANTIT L'AFFICHAGE DE LA BARRE LATÉRALE --- */
     [data-testid="stSidebar"] {
-        background-color: #050b14;
-        border-right: 1px solid #0077ff44;
+        background-color: #050b14 !important;
+        border-right: 1px solid #0077ff44 !important;
+        visibility: visible !important;
+        display: block !important;
     }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
         color: #cbd5e1 !important;
@@ -116,7 +111,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR ---
+# --- SIDEBAR (BIEN PRÉSENTE À GAUCHE) ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
