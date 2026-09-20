@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page avec la barre latérale forcée ouverte
+# Configuration de la page Streamlit (avec la barre latérale ouverte par défaut)
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
@@ -11,27 +11,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS CORRIGÉ : RESTAURATION TOTALE DE LA BARRE DE GAUCHE ---
+# --- STYLE CSS PROPRE (SANS MASQUER L'EN-TÊTE POUR GARDER LA FLÈCHE) ---
 st.markdown("""
     <style>
-    /* Masque uniquement l'en-tête supérieur inutile de Streamlit */
-    [data-testid="stHeader"] {
-        display: none !important;
-    }
-    
-    /* Masque le badge de bas de page */
-    .stDeployButton {display: none !important;}
-    
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
     }
     
-    /* --- BARRE LATÉRALE FORCÉE ET VISIBLE --- */
+    /* --- BARRE LATÉRALE --- */
     [data-testid="stSidebar"] {
-        background-color: #050b14 !important;
-        border-right: 1px solid #0077ff44 !important;
-        display: block !important;
+        background-color: #050b14;
+        border-right: 1px solid #0077ff44;
     }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
         color: #cbd5e1 !important;
@@ -111,7 +102,7 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR (GARANTIE ET VISIBLE) ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.markdown("### 🛡️ URL RISK ANALYZER")
     st.caption("Threat Intelligence & Risk Engine")
