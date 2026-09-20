@@ -3,18 +3,26 @@ from datetime import datetime
 import uuid
 from supabase import create_client, Client
 
-# Configuration de la page Streamlit avec la barre latérale ouverte par défaut
+# Configuration de la page Streamlit (barre repliée par défaut)
 st.set_page_config(
     page_title="Analyse des Risques d'URL | SOC Dashboard",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# --- STYLE CSS : NETTOIE LE HAUT MAIS GARDE LA SIDEBAR INTACTE ---
+# --- STYLE CSS : SUPPRESSION TOTALE DE LA BARRE LATÉRALE ---
 st.markdown("""
     <style>
-    /* Cache uniquement les boutons de partage et l'icône GitHub en haut à droite */
+    /* Cache complètement la barre latérale et son bouton de contrôle */
+    [data-testid="stSidebar"] {
+        display: none !important;
+    }
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+    
+    /* Cache uniquement les boutons de partage et l'en-tête supérieur inutile */
     header [data-testid="stToolbar"],
     .stDeployButton,
     [data-testid="stStatusWidget"] {
@@ -24,20 +32,6 @@ st.markdown("""
     .stApp {
         background-color: #000000;
         color: #e0f2fe;
-    }
-    
-    /* --- GARANTIT L'AFFICHAGE DE LA BARRE LATÉRALE --- */
-    [data-testid="stSidebar"] {
-        background-color: #050b14 !important;
-        border-right: 1px solid #0077ff44 !important;
-        visibility: visible !important;
-        display: block !important;
-    }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
-        color: #cbd5e1 !important;
-    }
-    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
-        color: #38bdf8 !important;
     }
 
     /* Style ultra-visible pour les blocs de métriques (KPIs) */
@@ -111,22 +105,6 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- SIDEBAR (BIEN PRÉSENTE À GAUCHE) ---
-with st.sidebar:
-    st.markdown("### 🛡️ URL RISK ANALYZER")
-    st.caption("Threat Intelligence & Risk Engine")
-    
-    st.markdown("---")
-    st.markdown("#### 📊 STATUT SYSTÈME")
-    st.success("Supabase : EN LIGNE" if supabase_connected else "Supabase : HORS LIGNE")
-    st.success("API VirusTotal : ACTIVE" if vt_active else "API VirusTotal : INACTIVE")
-
-    st.markdown("---")
-    st.markdown("#### 📖 MATRICE DE MENACE")
-    st.markdown("🟢 **SÛR** : Zéro compromission.")
-    st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
-    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
-
 # --- EN-TÊTE DE L'APPLICATION ---
 col_logo, col_title = st.columns([0.08, 0.92])
 with col_logo:
@@ -137,7 +115,15 @@ with col_title:
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
-# --- SECTION TABLEAU DE BORD / KPI ---
+# --- SECTION TABLEAU DE BORD / KPI (Intégration du statut système ici puisque la sidebar est supprimée) ---
+col_stat1, col_stat2 = st.columns(2)
+with col_stat1:
+    st.info("🟢 Supabase : EN LIGNE" if supabase_connected else "🔴 Supabase : HORS LIGNE")
+with col_stat2:
+    st.info("🟢 API VirusTotal : ACTIVE" if vt_active else "🔴 API VirusTotal : INACTIVE")
+
+st.markdown("---")
+
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label="Moteur d'Audit", value="ACTIF", delta="Stable")
