@@ -198,7 +198,15 @@ with st.container(border=True):
                             "user_email": current_session
                         }
                         supabase.table("analyses").insert(data_to_insert).execute()
-                        st.success(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
+                        
+                        # Affichage dynamique de la couleur de l'alerte
+                        if niveau_risque == "DANGEROUS":
+                            st.error(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
+                        elif niveau_risque == "SUSPECT":
+                            st.warning(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
+                        else:
+                            st.success(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
+                            
                     except Exception as ex:
                         st.error(f"Erreur d'écriture en base : {ex}")
                 else:
