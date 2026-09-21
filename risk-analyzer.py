@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- STYLE CSS : MASQUE LE HEADER SUPÉRIEUR ET VERROUILLE LA SIDEBAR ---
+# --- STYLE CSS ---
 st.markdown("""
     <style>
     header[data-testid="stHeader"] { display: none !important; }
@@ -92,42 +92,40 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- MOTEUR DE DÉCISION STRICT (ZÉRO FAUX SÛR SUR LES LIENS LOUCHES) ---
-def analyser_url_stricte(url_cible):
+# --- MOTEUR ULTRA-STRICT : POLITIQUE ZERO TRUST ---
+def analyser_url_zero_trust(url_cible):
     url_lower = url_cible.lower().strip()
     
-    score_risque = 0
-    nb_malveillants = 0
-    nb_suspects = 0
-
-    # 1. Listes de mots-clés malveillants ou suspects
+    # 1. Listes explicites
+    domaines_malveillants = ["aueon.com", "aueon", "bkefo.buzz"]
     mots_dangereux = ["eicar", "hacker", "malware", "corevixnet", "phishing", "trojan", "payload", "exploit"]
-    mots_suspects = ["login", "secure", "update", "verify", "account", "bank", "free", "auth", "ci-fr", "wa&"]
+    mots_suspects = ["login", "secure", "update", "verify", "account", "bank", "free", "auth", "ci-fr"]
 
-    if any(mot in url_lower for mot in mots_dangereux):
+    # Domaines officiels ultra-sécurisés (Seuls les éléments de cette liste peuvent espérer passer en SÛR)
+    domaines_blancs_strict = ["google.com", "microsoft.com", "github.com", "supabase.com", "streamlit.io"]
+
+    # Forçage immédiat DANGEROUS
+    if any(dom in url_lower for dom in domaines_malveillants) or any(mot in url_lower for mot in mots_dangereux):
         return "DANGEROUS", 3, 1
-    
-    if any(mot in url_lower for mot in mots_suspects):
-        score_risque += 2
-        nb_suspects += 1
 
-    # 2. Extensions de domaine à haut risque (ex: .buzz, .tk, etc.)
+    # Forçage SUSPECT pour mots-clés ou structures louches
+    if any(mot in url_lower for mot in mots_suspects):
+        return "SUSPECT", 0, 1
+
+    # Extensions à haut risque
     extensions_risque = ['.buzz', '.tk', '.ml', '.ga', '.cf', '.gq', '.xyz', '.top', '.zip', '.click', '.loan', '.work', '.site', '.online']
     if any(ext in url_lower for ext in extensions_risque):
-        score_risque += 3
-        nb_suspects += 2
+        return "SUSPECT", 0, 2
 
-    # 3. Structure d'URL suspecte (paramètres longs, chaînes aléatoires de type /qrLJHbAshZ/)
-    if "?" in url_lower and len(url_lower) > 30:
-        score_risque += 2
-        nb_suspects += 1
+    # Structures d'URL complexes ou paramètres suspects
+    if "?" in url_lower or len(url_lower) > 25:
+        return "SUSPECT", 0, 1
 
-    if re.search(r'/[a-zA-Z0-9]{8,}/', url_lower):
-        score_risque += 2
-        nb_suspects += 1
+    if re.search(r'/[a-zA-Z0-9]{6,}/', url_lower):
+        return "SUSPECT", 0, 1
 
-    # 4. Interrogation VirusTotal (uniquement si le lien ne déclenche pas d'alerte locale majeure)
-    if vt_active and score_risque == 0:
+    # 2. Interrogation VirusTotal si configuré
+    if vt_active:
         try:
             headers = {"x-apikey": VT_API_KEY}
             response = requests.post("https://www.virustotal.com/api/v3/urls", data={"url": url_cible}, headers=headers, timeout=10)
@@ -147,15 +145,14 @@ def analyser_url_stricte(url_cible):
         except Exception:
             pass
 
-    # 5. GAR-FOU ABSOLU : Si le moindre score de risque est détecté, le lien NE PEUT PAS être "SÛR"
-    if score_risque >= 3 or nb_malveillants > 0:
-        return "DANGEROUS", max(1, nb_malveillants), max(1, nb_suspects)
-    elif score_risque >= 1 or nb_suspects > 0:
-        return "SUSPECT", 0, max(1, nb_suspects)
-    else:
+    # 3. VÉRIFICATION FINALE STRICTE (ZERO TRUST) :
+    # Si le domaine n'appartient pas explicitement à la liste blanche des géants de confiance, il est SUSPECT par défaut.
+    if any(blanc in url_lower for blanc in domaines_blancs_strict):
         return "SÛR", 0, 0
+    else:
+        return "SUSPECT", 0, 1
 
-# --- BARRE LATÉRALE FIXE À GAUCHE ---
+# --- BARRE LATÉRALE FIXE ---
 with st.sidebar:
     st.markdown("## 🛡️ URL RISK ANALYZER")
     st.caption("Renseignements sur les menaces en entreprise")
@@ -167,11 +164,11 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("#### 📖 THREAT MATRIX")
-    st.markdown("🟢 **SÛR** : Zéro compromission.")
-    st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
-    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
+    st.markdown("🟢 **SÛR** : Uniquement domaines whitelistés.")
+    st.markdown("🟡 **SUSPECT** : Défaut Zero Trust / Anomalie.")
+    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant avéré.")
 
-# --- EN-TÊTE DE L'APPLICATION ---
+# --- EN-TÊTE ---
 col_logo, col_title = st.columns([0.08, 0.92])
 with col_logo:
     st.markdown("# 🛡️")
@@ -181,10 +178,10 @@ with col_title:
 st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
 st.markdown("---")
 
-# --- SECTION TABLEAU DE BORD / KPI ---
+# --- KPI ---
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric(label="Moteur d'Audit", value="ACTIF", delta="Stable")
+    st.metric(label="Moteur d'Audit", value="ZERO TRUST", delta="Actif")
 with col2:
     st.metric(label="Sécurité Réseau", value="PROTÉGÉ", delta="RLS Actif")
 with col3:
@@ -206,8 +203,8 @@ with st.container(border=True):
         if not input_value:
             st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
         else:
-            with st.spinner("Exécution du moteur d'analyse de risque & consignation des logs..."):
-                niveau_risque, nb_malveillants, nb_suspects = analyser_url_stricte(input_value)
+            with st.spinner("Exécution du moteur d'analyse Zero Trust & consignation des logs..."):
+                niveau_risque, nb_malveillants, nb_suspects = analyser_url_zero_trust(input_value)
 
                 if supabase_connected:
                     try:
@@ -234,7 +231,7 @@ with st.container(border=True):
 
 st.markdown("---")
 
-# --- TABLEAU DES JOURNAUX (STYLE SOC AVEC BADGES COLORÉS) ---
+# --- TABLEAU DES JOURNAUX ---
 st.markdown("### 📜 SESSION AUDIT LOGS")
 
 if supabase_connected:
@@ -280,11 +277,11 @@ if supabase_connected:
 else:
     st.info("Connexion Supabase requise pour afficher les journaux.")
 
-# --- PIED DE PAGE PROFESSIONNEL ---
+# --- PIED DE PAGE ---
 st.markdown("---")
 st.markdown(
     "<p style='text-align: center; color: #475569; font-size: 0.85rem; font-family: monospace;'>"
-    "URL Risk Analyzer • Enterprise Security Dashboard v1.0 • Secure RLS Session Isolation"
+    "URL Risk Analyzer • Enterprise Security Dashboard v1.0 • Zero Trust Enforcement"
     "</p>", 
     unsafe_allow_html=True
 )
