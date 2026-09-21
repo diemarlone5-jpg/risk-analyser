@@ -5,7 +5,7 @@ from supabase import create_client, Client
 
 # Configuration de la page avec la barre latérale ouverte par défaut
 st.set_page_config(
-    page_title="Analyse des Risques d'URL | SOC Dashboard",
+    page_title="URL Risk Analyzer | SOC Dashboard",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -29,7 +29,7 @@ st.markdown("""
         display: block !important;
         visibility: visible !important;
         transform: none !important;
-        width: 300px !important;
+        width: 320px !important;
         background-color: #050b14 !important;
         border-right: 1px solid #0077ff44 !important;
     }
@@ -125,59 +125,59 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- BARRE LATÉRALE FIXE À GAUCHE ---
+# --- BARRE LATÉRALE FIXE À GAUCHE (EN ANGLAIS) ---
 with st.sidebar:
-    st.markdown("### 🛡️ URL RISK ANALYZER")
-    st.caption("Renseignements sur les menaces en entreprise")
+    st.markdown("## 🛡️ URL RISK ANALYZER")
+    st.caption("Enterprise Threat Intelligence")
     
     st.markdown("---")
-    st.markdown("#### 📊 STATUT SYSTÈME")
-    st.success("Supabase : EN LIGNE" if supabase_connected else "Supabase : HORS LIGNE")
-    st.success("API VirusTotal : ACTIVE" if vt_active else "API VirusTotal : INACTIVE")
+    st.markdown("#### 📊 SYSTEM STATUS")
+    st.success("Supabase : ONLINE" if supabase_connected else "Supabase : OFFLINE")
+    st.success("VirusTotal API : ACTIVE" if vt_active else "VirusTotal API : INACTIVE")
 
     st.markdown("---")
-    st.markdown("#### 📖 MATRICE DE MENACE")
-    st.markdown("🟢 **SÛR** : Zéro compromission.")
-    st.markdown("🟡 **SUSPECT** : Anomalie détectée.")
-    st.markdown("🔴 **DANGEROUS** : Attracteur malveillant.")
+    st.markdown("#### 📖 THREAT MATRIX")
+    st.markdown("🟢 **SAFE** : Zero compromise.")
+    st.markdown("🟡 **SUSPICIOUS** : Anomaly detected.")
+    st.markdown("🔴 **DANGEROUS** : Malicious attractor.")
 
 # --- EN-TÊTE DE L'APPLICATION ---
 col_logo, col_title = st.columns([0.08, 0.92])
 with col_logo:
     st.markdown("# 🛡️")
 with col_title:
-    st.markdown("# ANALYSE DES RISQUES D'URL")
+    st.markdown("# URL RISK ANALYZER")
 
-st.markdown("Moteur de Threat Intelligence et d'audit de sécurité des URL en temps réel.")
+st.markdown("Real-time Threat Intelligence and URL security auditing engine.")
 st.markdown("---")
 
 # --- SECTION TABLEAU DE BORD / KPI ---
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric(label="Moteur d'Audit", value="ACTIF", delta="Stable")
+    st.metric(label="Audit Engine", value="ACTIVE", delta="Stable")
 with col2:
-    st.metric(label="Sécurité Réseau", value="PROTÉGÉ", delta="RLS Actif")
+    st.metric(label="Network Security", value="PROTECTED", delta="RLS Active")
 with col3:
-    st.metric(label="Sondes Connectées", value="2 / 2", delta="Optimal")
+    st.metric(label="Connected Probes", value="2 / 2", delta="Optimal")
 
 st.markdown("---")
 
 # --- SECTION ENQUÊTE ---
-st.markdown("### 🔍 INITIATION D'UNE ENQUÊTE")
+st.markdown("### 🔍 INITIATE INVESTIGATION")
 
 with st.container(border=True):
     input_value = st.text_input(
-        "Cible de l'analyse (URL) :", 
+        "Target Analysis (URL) :", 
         value="", 
-        placeholder="https://exemple.com/path/suspect"
+        placeholder="https://example.com/path/suspect"
     )
 
-    if st.button("Lancer l'analyse de sécurité", type="primary"):
+    if st.button("Launch Security Analysis", type="primary"):
         if not input_value:
-            st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
+            st.warning("⚠️ Please enter a valid URL to scan.")
         else:
-            with st.spinner("Exécution des sondes VirusTotal & consignation des logs..."):
-                niveau_risque = "SÛR"
+            with st.spinner("Executing VirusTotal probes & logging data..."):
+                niveau_risque = "SAFE"
                 nb_malveillants = 0
                 nb_suspects = 0
                 
@@ -185,7 +185,7 @@ with st.container(border=True):
                     niveau_risque = "DANGEROUS"
                     nb_malveillants = 1
                 elif "login" in input_value.lower() or "secure" in input_value.lower():
-                    niveau_risque = "SUSPECT"
+                    niveau_risque = "SUSPICIOUS"
                     nb_suspects = 1
 
                 if supabase_connected:
@@ -198,16 +198,16 @@ with st.container(border=True):
                             "user_email": current_session
                         }
                         supabase.table("analyses").insert(data_to_insert).execute()
-                        st.success(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
+                        st.success(f"Target analyzed [Risk Level : {niveau_risque}] and logged to secure registry.")
                     except Exception as ex:
-                        st.error(f"Erreur d'écriture en base : {ex}")
+                        st.error(f"Database write error : {ex}")
                 else:
-                    st.warning("Analyse effectuée, mais non enregistrée (Base déconnectée).")
+                    st.warning("Analysis completed, but not saved (Database disconnected).")
 
 st.markdown("---")
 
 # --- TABLEAU DES JOURNAUX (STYLE ENTREPRISE) ---
-st.markdown("### 📜 REGISTRE DES AUDITS DE SESSION")
+st.markdown("### 📜 SESSION AUDIT LOGS")
 
 if supabase_connected:
     try:
@@ -227,21 +227,21 @@ if supabase_connected:
                     date_str = date_str.replace("T", " ")[:19]
                     
                 table_data.append({
-                    "Horodatage": date_str,
-                    "Cible Analysée": log.get("input_url") or log.get("url"),
-                    "Niveau de Risque": log.get("risk_level"),
-                    "Moteurs Malveillants": log.get("malicious_count"),
-                    "Moteurs Suspects": log.get("suspicious_count")
+                    "Timestamp": date_str,
+                    "Target URL": log.get("input_url") or log.get("url"),
+                    "Risk Level": log.get("risk_level"),
+                    "Malicious Engines": log.get("malicious_count"),
+                    "Suspicious Engines": log.get("suspicious_count")
                 })
             
             st.dataframe(table_data, use_container_width=True, hide_index=True)
         else:
-            st.info("Aucun journal actif pour cette session. Lancez une analyse ci-dessus.")
+            st.info("No active logs for this session. Launch an analysis above.")
             
     except Exception as e:
-        st.error(f"Erreur de lecture du registre : {e}")
+        st.error(f"Registry read error : {e}")
 else:
-    st.info("Connexion Supabase requise pour afficher les journaux.")
+    st.info("Supabase connection required to display logs.")
 
 # --- PIED DE PAGE PROFESSIONNEL ---
 st.markdown("---")
