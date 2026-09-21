@@ -199,7 +199,6 @@ with st.container(border=True):
                         }
                         supabase.table("analyses").insert(data_to_insert).execute()
                         
-                        # Affichage dynamique de la couleur de l'alerte
                         if niveau_risque == "DANGEROUS":
                             st.error(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
                         elif niveau_risque == "SUSPECT":
@@ -214,7 +213,7 @@ with st.container(border=True):
 
 st.markdown("---")
 
-# --- TABLEAU DES JOURNAUX (STYLE ENTREPRISE) ---
+# --- TABLEAU DES JOURNAUX (STYLE SOC AVEC BADGES COLORÉS) ---
 st.markdown("### 📜 SESSION AUDIT LOGS")
 
 if supabase_connected:
@@ -228,21 +227,103 @@ if supabase_connected:
         logs = response.data
         
         if logs:
-            table_data = []
+            # Construction d'un tableau HTML stylisé avec badges colorés
+            html_table = """
+            <style>
+                .soc-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-family: 'Courier New', Courier, monospace;
+                    font-size: 0.9rem;
+                    color: #e0f2fe;
+                    background-color: #050b14;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    border: 1px solid #1e293b;
+                }
+                .soc-table th {
+                    text-align: left;
+                    padding: 12px 15px;
+                    background-color: #0b1329;
+                    color: #94a3b8;
+                    border-bottom: 1px solid #1e293b;
+                    font-weight: bold;
+                }
+                .soc-table td {
+                    padding: 12px 15px;
+                    border-bottom: 1px solid #0f172a;
+                }
+                .soc-table tr:hover {
+                    background-color: #0b132b;
+                }
+                .badge-danger {
+                    background-color: #7f1d1d;
+                    color: #f87171;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    font-size: 0.75rem;
+                    letter-spacing: 0.5px;
+                }
+                .badge-suspect {
+                    background-color: #78350f;
+                    color: #fbbf24;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    font-size: 0.75rem;
+                    letter-spacing: 0.5px;
+                }
+                .badge-safe {
+                    background-color: #064e3b;
+                    color: #34d399;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    font-size: 0.75rem;
+                    letter-spacing: 0.5px;
+                }
+            </style>
+            <table class="soc-table">
+                <tr>
+                    <th>Horodatage</th>
+                    <th>Cible Analysée</th>
+                    <th>Niveau de Risque</th>
+                    <th>Moteurs Malveillants</th>
+                    <th>Moteurs Suspects</th>
+                </tr>
+            """
+            
             for log in logs:
                 date_str = log.get("created_at", "")
                 if "T" in date_str:
                     date_str = date_str.replace("T", " ")[:19]
-                    
-                table_data.append({
-                    "Horodatage": date_str,
-                    "Cible Analysée": log.get("input_url") or log.get("url"),
-                    "Niveau de Risque": log.get("risk_level"),
-                    "Moteurs Malveillants": log.get("malicious_count"),
-                    "Moteurs Suspects": log.get("suspicious_count")
-                })
+                
+                target_url = log.get("input_url") or log.get("url", "")
+                risk = log.get("risk_level", "SÛR")
+                malicious = log.get("malicious_count", 0)
+                suspicious = log.get("suspicious_count", 0)
+                
+                # Attribution de la classe CSS du badge selon le risque
+                if risk == "DANGEROUS":
+                    badge_class = "badge-danger"
+                elif risk == "SUSPECT":
+                    badge_class = "badge-suspect"
+                else:
+                    badge_class = "badge-safe"
+                
+                html_table += f"""
+                <tr>
+                    <td>{date_str}</td>
+                    <td>{target_url}</td>
+                    <td><span class="{badge_class}">{risk}</span></td>
+                    <td>{malicious}</td>
+                    <td>{suspicious}</td>
+                </tr>
+                """
             
-            st.dataframe(table_data, use_container_width=True, hide_index=True)
+            html_table += "</table>"
+            st.markdown(html_table, unsafe_allow_html=True)
         else:
             st.info("Aucun journal actif pour cette session. Lancez une analyse ci-dessus.")
             
