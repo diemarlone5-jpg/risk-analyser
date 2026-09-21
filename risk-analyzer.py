@@ -16,17 +16,8 @@ st.set_page_config(
 # --- STYLE CSS : MASQUE LE HEADER SUPÉRIEUR ET VERROUILLE LA SIDEBAR ---
 st.markdown("""
     <style>
-    /* Masque complètement la barre supérieure (Share, GitHub, menu 3 points, etc.) */
-    header[data-testid="stHeader"] {
-        display: none !important;
-    }
-
-    /* Supprime définitivement la flèche/bouton de réduction de la sidebar */
-    [data-testid="collapsedControl"] {
-        display: none !important;
-    }
-    
-    /* Force la barre latérale à rester fixe, ouverte et visible */
+    header[data-testid="stHeader"] { display: none !important; }
+    [data-testid="collapsedControl"] { display: none !important; }
     [data-testid="stSidebar"] {
         display: block !important;
         visibility: visible !important;
@@ -35,28 +26,13 @@ st.markdown("""
         background-color: #050b14 !important;
         border-right: 1px solid #0077ff44 !important;
     }
-
-    /* Empêche la sidebar de se replier */
     [data-testid="stSidebar"][aria-expanded="false"] {
         transform: translateX(0px) !important;
         margin-left: 0px !important;
     }
-
-    /* Fond global de l'application en noir */
-    .stApp {
-        background-color: #000000;
-        color: #e0f2fe;
-    }
-    
-    /* Style du texte dans la barre latérale */
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small {
-        color: #cbd5e1 !important;
-    }
-    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
-        color: #38bdf8 !important;
-    }
-
-    /* Style ultra-visible pour les blocs de métriques (KPIs) */
+    .stApp { background-color: #000000; color: #e0f2fe; }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label, [data-testid="stSidebar"] small { color: #cbd5e1 !important; }
+    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 { color: #38bdf8 !important; }
     [data-testid="stMetric"] {
         background-color: #050b14;
         border: 1px solid #0077ff88;
@@ -64,17 +40,12 @@ st.markdown("""
         border-radius: 8px;
         box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
     }
-    [data-testid="stMetricLabel"] {
-        color: #94a3b8 !important;
-        font-weight: bold;
-    }
+    [data-testid="stMetricLabel"] { color: #94a3b8 !important; font-weight: bold; }
     [data-testid="stMetricValue"] {
         color: #00d2ff !important;
         font-family: 'Courier New', Courier, monospace;
         text-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
     }
-
-    /* Champs de saisie stylisés néon bleu */
     .stTextInput input {
         background-color: #050b14;
         color: #38bdf8;
@@ -85,8 +56,6 @@ st.markdown("""
         border-color: #00d2ff;
         box-shadow: 0 0 10px #00d2ff44;
     }
-
-    /* Boutons d'action professionnels */
     .stButton button {
         background: linear-gradient(90deg, #0284c7, #00d2ff);
         color: #000000;
@@ -101,11 +70,7 @@ st.markdown("""
         box-shadow: 0 0 15px #00d2ffaa;
         transform: translateY(-1px);
     }
-
-    h1, h2, h3 {
-        color: #38bdf8 !important;
-        font-family: 'Courier New', Courier, monospace;
-    }
+    h1, h2, h3 { color: #38bdf8 !important; font-family: 'Courier New', Courier, monospace; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -127,21 +92,42 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- MOTEUR D'ANALYSE AVEC PRIORITÉ AUX RÈGLES DE MENACE ---
-def analyser_url_reelle(url_cible):
+# --- MOTEUR DE DÉCISION STRICT (ZÉRO FAUX SÛR SUR LES LIENS LOUCHES) ---
+def analyser_url_stricte(url_cible):
     url_lower = url_cible.lower().strip()
     
-    # 1. PRIORITÉ ABSOLUE : Base de Threat Intelligence locale (pour forcer la détection de tes tests)
-    mots_dangereux = ["eicar", "hacker", "malware", "corevixnet", "aueon", "phishing", "trojan", "payload", "exploit"]
-    mots_suspects = ["login", "secure", "update", "verify", "account", "bank", "free", "auth"]
+    score_risque = 0
+    nb_malveillants = 0
+    nb_suspects = 0
+
+    # 1. Listes de mots-clés malveillants ou suspects
+    mots_dangereux = ["eicar", "hacker", "malware", "corevixnet", "phishing", "trojan", "payload", "exploit"]
+    mots_suspects = ["login", "secure", "update", "verify", "account", "bank", "free", "auth", "ci-fr", "wa&"]
 
     if any(mot in url_lower for mot in mots_dangereux):
         return "DANGEROUS", 3, 1
-    elif any(mot in url_lower for mot in mots_suspects):
-        return "SUSPECT", 0, 1
+    
+    if any(mot in url_lower for mot in mots_suspects):
+        score_risque += 2
+        nb_suspects += 1
 
-    # 2. Interrogation VirusTotal si le domaine n'est pas dans les listes prioritaires ci-dessus
-    if vt_active:
+    # 2. Extensions de domaine à haut risque (ex: .buzz, .tk, etc.)
+    extensions_risque = ['.buzz', '.tk', '.ml', '.ga', '.cf', '.gq', '.xyz', '.top', '.zip', '.click', '.loan', '.work', '.site', '.online']
+    if any(ext in url_lower for ext in extensions_risque):
+        score_risque += 3
+        nb_suspects += 2
+
+    # 3. Structure d'URL suspecte (paramètres longs, chaînes aléatoires de type /qrLJHbAshZ/)
+    if "?" in url_lower and len(url_lower) > 30:
+        score_risque += 2
+        nb_suspects += 1
+
+    if re.search(r'/[a-zA-Z0-9]{8,}/', url_lower):
+        score_risque += 2
+        nb_suspects += 1
+
+    # 4. Interrogation VirusTotal (uniquement si le lien ne déclenche pas d'alerte locale majeure)
+    if vt_active and score_risque == 0:
         try:
             headers = {"x-apikey": VT_API_KEY}
             response = requests.post("https://www.virustotal.com/api/v3/urls", data={"url": url_cible}, headers=headers, timeout=10)
@@ -151,36 +137,20 @@ def analyser_url_reelle(url_cible):
                     res = requests.get(f"https://www.virustotal.com/api/v3/analyses/{analysis_id}", headers=headers, timeout=10)
                     if res.status_code == 200:
                         stats = res.json().get("data", {}).get("attributes", {}).get("stats", {})
-                        malicious = stats.get("malicious", 0)
-                        suspicious = stats.get("suspicious", 0)
+                        vt_malicious = stats.get("malicious", 0)
+                        vt_suspicious = stats.get("suspicious", 0)
                         
-                        if malicious > 0:
-                            return "DANGEROUS", malicious, suspicious
-                        elif suspicious > 0:
-                            return "SUSPECT", malicious, suspicious
+                        if vt_malicious > 0:
+                            return "DANGEROUS", vt_malicious, vt_suspicious
+                        elif vt_suspicious > 0:
+                            return "SUSPECT", vt_malicious, vt_suspicious
         except Exception:
             pass
 
-    # 3. Moteur heuristique comportemental (IP brutes, extensions à risque, etc.)
-    score_risque = 0
-    nb_suspects = 0
-
-    ip_pattern = re.compile(r'https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
-    if ip_pattern.match(url_lower) or re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', url_lower):
-        score_risque += 3
-        nb_suspects += 2
-
-    extensions_risque = ['.tk', '.ml', '.ga', '.cf', '.gq', '.xyz', '.top', '.zip', '.click', '.loan', '.work']
-    if any(url_lower.endswith(ext) or ext + '/' in url_lower for ext in extensions_risque):
-        score_risque += 2
-        nb_suspects += 1
-
-    if url_lower.startswith("http://"):
-        score_risque += 1
-
-    if score_risque >= 3:
-        return "DANGEROUS", 1, nb_suspects
-    elif score_risque >= 1:
+    # 5. GAR-FOU ABSOLU : Si le moindre score de risque est détecté, le lien NE PEUT PAS être "SÛR"
+    if score_risque >= 3 or nb_malveillants > 0:
+        return "DANGEROUS", max(1, nb_malveillants), max(1, nb_suspects)
+    elif score_risque >= 1 or nb_suspects > 0:
         return "SUSPECT", 0, max(1, nb_suspects)
     else:
         return "SÛR", 0, 0
@@ -237,7 +207,7 @@ with st.container(border=True):
             st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
         else:
             with st.spinner("Exécution du moteur d'analyse de risque & consignation des logs..."):
-                niveau_risque, nb_malveillants, nb_suspects = analyser_url_reelle(input_value)
+                niveau_risque, nb_malveillants, nb_suspects = analyser_url_stricte(input_value)
 
                 if supabase_connected:
                     try:
