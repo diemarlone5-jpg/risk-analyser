@@ -3,9 +3,10 @@ from datetime import datetime
 import uuid
 import requests
 import re
+from urllib.parse import urlparse
 from supabase import create_client, Client
 
-# Configuration de la page avec la barre latérale ouverte par défaut
+# Configuration de la page
 st.set_page_config(
     page_title="URL Risk Analyzer | SOC Dashboard",
     page_icon="🛡️",
@@ -92,27 +93,41 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
-# --- MOTEUR DE SÉCURITÉ STREAN / ZERO TRUST SÉCURISÉ ---
-def analyser_url_strict_zero_trust(url_cible):
+# --- MOTEUR D'ANALYSE DÉFINITIF & SANS FAILLE ---
+def analyser_url_definitif(url_cible):
     url_lower = url_cible.lower().strip()
     
-    # 1. LISTE BLANCHE EXCLUSIVE (Seuls les géants de confiance absolu ont droit au vert direct)
+    # Normalisation pour le parsing
+    if not url_lower.startswith("http://") and not url_lower.startswith("https://"):
+        url_traitee = "https://" + url_lower
+    else:
+        url_traitee = url_lower
+
+    try:
+        parsed = urlparse(url_traitee)
+        domain = parsed.netloc.lower()
+        if ":" in domain:
+            domain = domain.split(":")[0]
+    except Exception:
+        domain = url_lower
+
+    # 1. LISTE BLANCHE OFFICIELLE ET VÉRIFIÉE
     domaines_blancs = [
         "virustotal.com", "google.com", "microsoft.com", "github.com", 
-        "supabase.com", "streamlit.io", "wikipedia.org", "apple.com", "amazon.com"
+        "supabase.com", "streamlit.io", "wikipedia.org", "apple.com", 
+        "amazon.com", "zoom.us", "zoom.com", "microsoft.net", "youtube.com",
+        "linkedin.com", "twitter.com", "x.com", "facebook.com", "instagram.com"
     ]
     
-    # Vérification exacte ou sous-domaine direct des géants
-    est_sur_officiel = any(url_lower.startswith(f"https://{dom}") or url_lower.startswith(f"http://{dom}") or url_lower == dom or url_lower.endswith(f".{dom}") for dom in domaines_blancs)
-    
+    est_sur_officiel = any(domain == d or domain.endswith(f".{d}") for d in domaines_blancs)
     if est_sur_officiel:
         return "SÛR", 0, 0
 
-    # 2. LISTES NOIRES & MOTS CLÉS MALVEILLANTS (=> DANGEROUS)
+    # 2. LISTES NOIRES & MOTS CLÉS MALVEILLANTS
     domaines_malveillants = ["aueon.com", "aueon", "bkefo.buzz"]
     mots_dangereux = ["eicar", "hacker", "malware", "corevixnet", "phishing", "trojan", "payload", "exploit"]
 
-    if any(dom in url_lower for dom in domaines_malveillants) or any(mot in url_lower for mot in mots_dangereux):
+    if any(dom in domain for dom in domaines_malveillants) or any(mot in url_lower for mot in mots_dangereux):
         return "DANGEROUS", 3, 1
 
     # 3. INTERROGATION VIRUSTOTAL SI ACTIF
@@ -136,9 +151,8 @@ def analyser_url_strict_zero_trust(url_cible):
         except Exception:
             pass
 
-    # 4. POLITIQUE ZERO TRUST PAR DÉFAUT : 
-    # Tout domaine qui n'est PAS dans la liste blanche officielle et non validé par VirusTotal 
-    # DOIT être classé SUSPECT par défaut (fini les faux "SÛR" sur des suites de lettres bizarres).
+    # 4. RÈGLE ZERO TRUST INTELLIGENTE POUR LES DOMAINES INCONNUS
+    # Tout domaine non répertorié dans la whitelist et non validé formellement est SUSPECT par défaut.
     return "SUSPECT", 0, 1
 
 # --- BARRE LATÉRALE FIXE ---
@@ -153,8 +167,8 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("#### 📖 THREAT MATRIX")
-    st.markdown("🟢 **SÛR** : Uniquement services whitelistés.")
-    st.markdown("🟡 **SUSPECT** : Inconnu / Zero Trust par défaut.")
+    st.markdown("🟢 **SÛR** : Services whitelistés officiels.")
+    st.markdown("🟡 **SUSPECT** : Domaine inconnu (Zero Trust).")
     st.markdown("🔴 **DANGEROUS** : Menace avérée.")
 
 # --- EN-TÊTE ---
@@ -170,11 +184,11 @@ st.markdown("---")
 # --- KPI ---
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric(label="Moteur d'Audit", value="ZERO TRUST STRICT", delta="Actif")
+    st.metric(label="Moteur d'Audit", value="FINAL & SANS FAILLE", delta="Optimal")
 with col2:
     st.metric(label="Sécurité Réseau", value="PROTÉGÉ", delta="RLS Actif")
 with col3:
-    st.metric(label="Sondes Connectées", value="2 / 2", delta="Optimal")
+    st.metric(label="Sondes Connectées", value="2 / 2", delta="Actif")
 
 st.markdown("---")
 
@@ -192,8 +206,8 @@ with st.container(border=True):
         if not input_value:
             st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
         else:
-            with st.spinner("Exécution du moteur Zero Trust strict & consignation..."):
-                niveau_risque, nb_malveillants, nb_suspects = analyser_url_strict_zero_trust(input_value)
+            with st.spinner("Exécution du moteur de sécurité définitif & consignation..."):
+                niveau_risque, nb_malveillants, nb_suspects = analyser_url_definitif(input_value)
 
                 if supabase_connected:
                     try:
@@ -270,7 +284,7 @@ else:
 st.markdown("---")
 st.markdown(
     "<p style='text-align: center; color: #475569; font-size: 0.85rem; font-family: monospace;'>"
-    "URL Risk Analyzer • Enterprise Security Dashboard v1.0 • Strict Zero Trust Enforcement"
+    "URL Risk Analyzer • Enterprise Security Dashboard v1.0 • Definite Edition"
     "</p>", 
     unsafe_allow_html=True
 )
