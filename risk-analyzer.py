@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime
 import uuid
+import requests
 from supabase import create_client, Client
 
 # Configuration de la page avec la barre latérale ouverte par défaut
@@ -125,6 +126,46 @@ except Exception as e:
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
 
+# --- FONCTION D'ANALYSE (VIRUSTOTAL OU SIMULATION) ---
+def analyser_url(url_cible):
+    # Si la clé VirusTotal est configurée, on interroge la vraie API v3
+    if vt_active:
+        try:
+            headers = {"x-apikey": VT_API_KEY}
+            response = requests.post("https://www.virustotal.com/api/v3/urls", data={"url": url_cible}, headers=headers, timeout=10)
+            if response.status_code == 200:
+                analysis_id = response.json().get("data", {}).get("id")
+                if analysis_id:
+                    res = requests.get(f"https://www.virustotal.com/api/v3/analyses/{analysis_id}", headers=headers, timeout=10)
+                    if res.status_code == 200:
+                        stats = res.json().get("data", {}).get("attributes", {}).get("stats", {})
+                        malicious = stats.get("malicious", 0)
+                        suspicious = stats.get("suspicious", 0)
+                        
+                        if malicious > 0:
+                            return "DANGEROUS", malicious, suspicious
+                        elif suspicious > 0:
+                            return "SUSPECT", malicious, suspicious
+                        else:
+                            return "SÛR", malicious, suspicious
+        except Exception:
+            pass # En cas de coupure réseau, bascule sur le mode simulation
+
+    # Mode secours / simulation par mots-clés si pas de clé API ou échec
+    niveau_risque = "SÛR"
+    nb_malveillants = 0
+    nb_suspects = 0
+    
+    url_lower = url_cible.lower()
+    if "eicar" in url_lower or "hacker" in url_lower or "malware" in url_lower:
+        niveau_risque = "DANGEROUS"
+        nb_malveillants = 1
+    elif "login" in url_lower or "secure" in url_lower:
+        niveau_risque = "SUSPECT"
+        nb_suspects = 1
+        
+    return niveau_risque, nb_malveillants, nb_suspects
+
 # --- BARRE LATÉRALE FIXE À GAUCHE ---
 with st.sidebar:
     st.markdown("## 🛡️ URL RISK ANALYZER")
@@ -177,16 +218,7 @@ with st.container(border=True):
             st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
         else:
             with st.spinner("Exécution des sondes VirusTotal & consignation des logs..."):
-                niveau_risque = "SÛR"
-                nb_malveillants = 0
-                nb_suspects = 0
-                
-                if "eicar" in input_value.lower() or "hacker" in input_value.lower() or "malware" in input_value.lower():
-                    niveau_risque = "DANGEROUS"
-                    nb_malveillants = 1
-                elif "login" in input_value.lower() or "secure" in input_value.lower():
-                    niveau_risque = "SUSPECT"
-                    nb_suspects = 1
+                niveau_risque, nb_malveillants, nb_suspects = analyser_url(input_value)
 
                 if supabase_connected:
                     try:
