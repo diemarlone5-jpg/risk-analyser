@@ -5,6 +5,8 @@ verdict persistant et journal d'audit lisible.
 """
 
 import html
+import ipaddress
+import socket
 import time
 import uuid
 from datetime import datetime
@@ -304,6 +306,30 @@ VT_POLL_TIMEOUT = 30   # secondes d'attente max pour un rapport complet
 VT_POLL_INTERVAL = 2   # secondes entre deux lectures
 
 
+def est_cible_non_publique(domaine):
+    """Vrai si la cible est locale/privée (IP RFC1918, localhost, .local…).
+
+    Les moteurs externes ne peuvent pas atteindre ces adresses : leur absence
+    de signalement ne veut donc rien dire.
+    """
+    hote = domaine.split(":")[0].strip("[]").lower()
+    if hote in ("localhost", "127.0.0.1", "::1") or hote.endswith(".local") or hote.endswith(".localhost"):
+        return True
+
+    try:
+        return not ipaddress.ip_address(hote).is_global
+    except ValueError:
+        pass
+
+    try:
+        adresses = {info[4][0] for info in socket.getaddrinfo(hote, None)}
+        return bool(adresses) and all(
+            not ipaddress.ip_address(a.split("%")[0]).is_global for a in adresses
+        )
+    except Exception:
+        return False
+
+
 def interroger_virustotal(url_cible):
     """Soumet l'URL puis attend que l'analyse soit terminée.
 
@@ -366,34 +392,44 @@ def analyser_url_universel(url_cible):
     except Exception:
         domain = url_lower
 
+    # Une cible privée/locale ne peut pas être auditée par des moteurs externes :
+    # leur silence ne prouve rien.
+    if est_cible_non_publique(domain):
+        return (
+            "INCONNU",
+            0,
+            0,
+            "cible privée ou locale — non analysable par les moteurs externes",
+        )
+
     if "." not in domain or len(domain.split(".")[-1]) < 2:
-        return "SUSPECT", 0, 1
+        return "SUSPECT", 0, 1, None
 
     domaines_malveillants = ["aueon.com", "aueon", "bkefo.buzz"]
     mots_dangereux = ["eicar", "hacker", "malware", "corevixnet", "phishing", "trojan", "payload", "exploit"]
 
     if any(dom in domain for dom in domaines_malveillants) or any(mot in url_lower for mot in mots_dangereux):
-        return "DANGEROUS", 3, 1
+        return "DANGEROUS", 3, 1, None
 
     if vt_active:
         resultat_vt = interroger_virustotal(url_cible)
         if resultat_vt is None:
             # API muette, quota atteint ou rapport non prêt : on ne prétend pas
             # que l'URL est propre.
-            return "INCONNU", 0, 0
+            return "INCONNU", 0, 0, "rapport VirusTotal incomplet ou indisponible"
 
         vt_malicious, vt_suspicious = resultat_vt
         if vt_malicious > 0:
-            return "DANGEROUS", vt_malicious, vt_suspicious
+            return "DANGEROUS", vt_malicious, vt_suspicious, None
         if vt_suspicious > 0:
-            return "SUSPECT", vt_malicious, vt_suspicious
-        return "SÛR", 0, 0
+            return "SUSPECT", vt_malicious, vt_suspicious, None
+        return "SÛR", 0, 0, None
 
     mots_suspects = ["login", "secure", "update", "verify", "account", "bank", "free", "auth", "ci-fr"]
     if any(mot in url_lower for mot in mots_suspects):
-        return "SUSPECT", 0, 1
+        return "SUSPECT", 0, 1, None
 
-    return "SÛR", 0, 0
+    return "SÛR", 0, 0, None
 
 
 # --------------------------------------------------------------------------
@@ -513,13 +549,14 @@ with st.container(border=True):
             st.warning("Veuillez entrer une URL valide à scanner.")
         else:
             with st.spinner("Analyse en cours…"):
-                niveau_risque, nb_malveillants, nb_suspects = analyser_url_universel(input_value)
+                niveau_risque, nb_malveillants, nb_suspects, detail = analyser_url_universel(input_value)
 
             st.session_state.resultat = {
                 "url": input_value,
                 "niveau": niveau_risque,
                 "mal": nb_malveillants,
                 "sus": nb_suspects,
+                "detail": detail,
                 "ts": datetime.now().strftime("%d/%m/%Y à %H:%M:%S"),
                 "consigne": False,
                 "erreur": None,
@@ -546,7 +583,9 @@ with st.container(border=True):
         niveau = resultat["niveau"]
         classe = {"DANGEROUS": "danger", "SUSPECT": "suspect", "INCONNU": "unknown"}.get(niveau, "safe")
         icone = {"DANGEROUS": "⛔", "SUSPECT": "⚠️", "INCONNU": "❔"}.get(niveau, "✅")
-        if niveau == "INCONNU":
+        if resultat.get("detail"):
+            compteurs = resultat["detail"]
+        elif niveau == "INCONNU":
             compteurs = "rapport VirusTotal incomplet ou indisponible"
         else:
             compteurs = (
