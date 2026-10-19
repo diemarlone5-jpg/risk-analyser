@@ -62,6 +62,7 @@ html, body, [data-testid="stAppViewContainer"]{
 }
 
 [data-testid="stHeader"], #MainMenu, footer{display:none !important;}
+[data-testid="stStatusWidget"], [data-testid="stToolbar"]{display:none !important;}
 
 [data-testid="stMainBlockContainer"], .block-container{
   max-width:1180px;
