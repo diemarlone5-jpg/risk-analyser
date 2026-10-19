@@ -386,17 +386,18 @@ with st.sidebar:
         else '<span class="badge off">INACTIVE</span>'
     )
     st.markdown(
-        f"""
-        <div class="status-row"><span>Base Supabase</span>{etat_db}</div>
-        <div class="status-row"><span>API VirusTotal</span>{etat_vt}</div>
-        """,
+        f'<div class="status-row"><span>Base Supabase</span>{etat_db}</div>',
         unsafe_allow_html=True,
     )
     if supabase_error:
         st.markdown(
-            f'<div class="err-note">{html.escape(supabase_error)}</div>',
+            f'<div class="err-note">Erreur Supabase — {html.escape(supabase_error)}</div>',
             unsafe_allow_html=True,
         )
+    st.markdown(
+        f'<div class="status-row"><span>API VirusTotal</span>{etat_vt}</div>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown('<div class="side-label">Threat matrix</div>', unsafe_allow_html=True)
     st.markdown(
