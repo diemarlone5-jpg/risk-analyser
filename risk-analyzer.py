@@ -190,6 +190,14 @@ h1.title .grad{
 [data-testid="stButton"] button:hover, .stButton>button:hover{transform:translateY(-1px);box-shadow:0 14px 38px rgba(34,211,238,.32);filter:brightness(1.04);}
 [data-testid="stButton"] button:active, .stButton>button:active{transform:translateY(0);}
 
+/* ---------------- Alertes ---------------- */
+[data-testid="stAlertContainer"], [data-testid="stAlert"]{
+  border-radius:12px !important;
+  border:1px solid rgba(148,163,184,.18) !important;
+  background:rgba(13,20,34,.92) !important;
+  color:#dbe7f5 !important;
+}
+
 /* ---------------- Verdict ---------------- */
 .verdict{
   display:flex;align-items:center;gap:16px;margin-top:16px;
