@@ -82,13 +82,20 @@ if "session_id" not in st.session_state:
 current_session = st.session_state.session_id
 
 # --- SUPABASE & API ---
+supabase = None
+supabase_connected = False
+supabase_error = None
+
 try:
-    SUPABASE_URL = st.secrets["SUPABASE_URL"]
-    SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+    SUPABASE_URL = str(st.secrets["SUPABASE_URL"]).strip().rstrip("/")
+    SUPABASE_KEY = str(st.secrets["SUPABASE_KEY"]).strip()
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    # create_client() ne fait AUCUN appel réseau : on vérifie réellement la base,
+    # sinon le badge « EN LIGNE » ment (cas d'une URL Supabase erronée/périmée).
+    supabase.table("analyses").select("id").limit(1).execute()
     supabase_connected = True
 except Exception as e:
-    supabase_connected = False
+    supabase_error = f"{type(e).__name__}: {e}"
 
 VT_API_KEY = st.secrets.get("VT_API_KEY", "")
 vt_active = bool(VT_API_KEY)
@@ -160,6 +167,8 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("#### 📊 SYSTEM STATUS")
     st.success("Supabase : EN LIGNE" if supabase_connected else "Supabase : HORS LIGNE")
+    if supabase_error:
+        st.caption(f"Détail : {supabase_error}")
     st.success("API VirusTotal : ACTIVE" if vt_active else "API VirusTotal : INACTIVE")
 
     st.markdown("---")
@@ -203,31 +212,33 @@ with st.container(border=True):
         if not input_value:
             st.warning("⚠️ Veuillez entrer une URL valide à scanner.")
         else:
-            with st.spinner("Exécution de l'analyse universelle & consignation des logs..."):
+            with st.spinner("Exécution de l'analyse universelle..."):
                 niveau_risque, nb_malveillants, nb_suspects = analyser_url_universel(input_value)
 
-                if supabase_connected:
-                    try:
-                        data_to_insert = {
-                            "input_url": input_value,
-                            "risk_level": niveau_risque,
-                            "malicious_count": nb_malveillants,
-                            "suspicious_count": nb_suspects,
-                            "user_email": current_session
-                        }
-                        supabase.table("analyses").insert(data_to_insert).execute()
-                        
-                        if niveau_risque == "DANGEROUS":
-                            st.error(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
-                        elif niveau_risque == "SUSPECT":
-                            st.warning(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
-                        else:
-                            st.success(f"Cible analysée [Niveau : {niveau_risque}] et consignée dans le registre sécurisé.")
-                            
-                    except Exception as ex:
-                        st.error(f"Erreur d'écriture en base : {ex}")
-                else:
-                    st.warning("Analyse effectuée, mais non enregistrée (Base déconnectée).")
+            # 1) Le verdict est TOUJOURS affiché, même si la consignation échoue.
+            detail = f"{nb_malveillants} moteur(s) malveillant(s), {nb_suspects} suspect(s)"
+            if niveau_risque == "DANGEROUS":
+                st.error(f"Cible analysée [Niveau : {niveau_risque}] — {detail}.")
+            elif niveau_risque == "SUSPECT":
+                st.warning(f"Cible analysée [Niveau : {niveau_risque}] — {detail}.")
+            else:
+                st.success(f"Cible analysée [Niveau : {niveau_risque}] — {detail}.")
+
+            # 2) La consignation est un bonus, pas un prérequis à l'affichage.
+            if supabase_connected:
+                try:
+                    supabase.table("analyses").insert({
+                        "input_url": input_value,
+                        "risk_level": niveau_risque,
+                        "malicious_count": nb_malveillants,
+                        "suspicious_count": nb_suspects,
+                        "user_email": current_session,
+                    }).execute()
+                    st.caption("Résultat consigné dans le registre sécurisé.")
+                except Exception as ex:
+                    st.warning(f"Résultat non consigné (base indisponible) : {ex}")
+            else:
+                st.info("Résultat non consigné : base Supabase déconnectée.")
 
 st.markdown("---")
 
