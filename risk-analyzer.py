@@ -5,6 +5,7 @@ verdict persistant et journal d'audit lisible.
 """
 
 import html
+import time
 import uuid
 from datetime import datetime
 from urllib.parse import urlparse
@@ -210,12 +211,15 @@ h1.title .grad{
 .verdict.suspect:before{background:var(--amber);}
 .verdict.danger{border-color:rgba(248,113,113,.36);background:linear-gradient(120deg,rgba(248,113,113,.14),rgba(6,14,24,.92));}
 .verdict.danger:before{background:var(--red);}
+.verdict.unknown{border-color:rgba(148,163,184,.30);background:linear-gradient(120deg,rgba(148,163,184,.10),rgba(6,14,24,.92));}
+.verdict.unknown:before{background:#94a3b8;}
 .v-icon{font-size:1.9rem;line-height:1;}
 .v-body{flex:1;min-width:0;}
 .v-label{font-size:1.28rem;font-weight:800;letter-spacing:.04em;line-height:1.1;}
 .v-label.safe{color:#5eead4;}
 .v-label.suspect{color:#fcd34d;}
 .v-label.danger{color:#fca5a5;}
+.v-label.unknown{color:#cbd5e1;}
 .v-url{
   font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#9db3c9;
   margin-top:5px;word-break:break-all;
@@ -240,6 +244,7 @@ h1.title .grad{
 .badge-danger{background:rgba(248,113,113,.14);color:#fca5a5;padding:4px 10px;border-radius:999px;font-weight:700;font-size:.65rem;letter-spacing:.06em;border:1px solid rgba(248,113,113,.3);}
 .badge-suspect{background:rgba(251,191,36,.13);color:#fcd34d;padding:4px 10px;border-radius:999px;font-weight:700;font-size:.65rem;letter-spacing:.06em;border:1px solid rgba(251,191,36,.3);}
 .badge-safe{background:rgba(52,211,153,.12);color:#6ee7b7;padding:4px 10px;border-radius:999px;font-weight:700;font-size:.65rem;letter-spacing:.06em;border:1px solid rgba(52,211,153,.3);}
+.badge-unknown{background:rgba(148,163,184,.14);color:#cbd5e1;padding:4px 10px;border-radius:999px;font-weight:700;font-size:.65rem;letter-spacing:.06em;border:1px solid rgba(148,163,184,.3);}
 .empty{
   padding:26px 18px;text-align:center;border:1px dashed rgba(148,163,184,.18);
   border-radius:14px;color:#6f88a1;font-size:.82rem;background:rgba(6,11,20,.4);
@@ -295,6 +300,56 @@ vt_active = bool(VT_API_KEY)
 # --------------------------------------------------------------------------
 # Moteur d'analyse
 # --------------------------------------------------------------------------
+VT_POLL_TIMEOUT = 30   # secondes d'attente max pour un rapport complet
+VT_POLL_INTERVAL = 2   # secondes entre deux lectures
+
+
+def interroger_virustotal(url_cible):
+    """Soumet l'URL puis attend que l'analyse soit terminée.
+
+    Retourne (malicious, suspicious) si un rapport complet est disponible,
+    None si l'API échoue ou si le rapport n'est pas prêt dans le délai.
+    Un rapport incomplet ne doit JAMAIS être interprété comme « aucun moteur
+    ne l'a signalé » : les compteurs valent 0 par défaut à ce stade.
+    """
+    headers = {"x-apikey": VT_API_KEY}
+
+    try:
+        reponse = requests.post(
+            "https://www.virustotal.com/api/v3/urls",
+            data={"url": url_cible},
+            headers=headers,
+            timeout=15,
+        )
+        if reponse.status_code != 200:
+            return None
+
+        analysis_id = reponse.json().get("data", {}).get("id")
+        if not analysis_id:
+            return None
+
+        echeance = time.time() + VT_POLL_TIMEOUT
+        while time.time() < echeance:
+            res = requests.get(
+                f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
+                headers=headers,
+                timeout=15,
+            )
+            if res.status_code != 200:
+                return None
+
+            attributs = res.json().get("data", {}).get("attributes", {})
+            if attributs.get("status") == "completed":
+                stats = attributs.get("stats", {}) or {}
+                return stats.get("malicious", 0), stats.get("suspicious", 0)
+
+            time.sleep(VT_POLL_INTERVAL)
+
+        return None
+    except Exception:
+        return None
+
+
 def analyser_url_universel(url_cible):
     url_lower = url_cible.lower().strip()
 
@@ -321,34 +376,18 @@ def analyser_url_universel(url_cible):
         return "DANGEROUS", 3, 1
 
     if vt_active:
-        try:
-            headers = {"x-apikey": VT_API_KEY}
-            response = requests.post(
-                "https://www.virustotal.com/api/v3/urls",
-                data={"url": url_cible},
-                headers=headers,
-                timeout=10,
-            )
-            if response.status_code == 200:
-                analysis_id = response.json().get("data", {}).get("id")
-                if analysis_id:
-                    res = requests.get(
-                        f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
-                        headers=headers,
-                        timeout=10,
-                    )
-                    if res.status_code == 200:
-                        stats = res.json().get("data", {}).get("attributes", {}).get("stats", {})
-                        vt_malicious = stats.get("malicious", 0)
-                        vt_suspicious = stats.get("suspicious", 0)
+        resultat_vt = interroger_virustotal(url_cible)
+        if resultat_vt is None:
+            # API muette, quota atteint ou rapport non prêt : on ne prétend pas
+            # que l'URL est propre.
+            return "INCONNU", 0, 0
 
-                        if vt_malicious > 0:
-                            return "DANGEROUS", vt_malicious, vt_suspicious
-                        if vt_suspicious > 0:
-                            return "SUSPECT", vt_malicious, vt_suspicious
-                        return "SÛR", 0, 0
-        except Exception:
-            pass
+        vt_malicious, vt_suspicious = resultat_vt
+        if vt_malicious > 0:
+            return "DANGEROUS", vt_malicious, vt_suspicious
+        if vt_suspicious > 0:
+            return "SUSPECT", vt_malicious, vt_suspicious
+        return "SÛR", 0, 0
 
     mots_suspects = ["login", "secure", "update", "verify", "account", "bank", "free", "auth", "ci-fr"]
     if any(mot in url_lower for mot in mots_suspects):
@@ -408,6 +447,8 @@ with st.sidebar:
           <div><div class="t">SUSPECT</div><div class="d">Anomalie structurelle ou doute.</div></div></div>
         <div class="mx"><div class="sq" style="background:#f87171"></div>
           <div><div class="t">DANGEREUX</div><div class="d">Menace avérée par les moteurs.</div></div></div>
+        <div class="mx"><div class="sq" style="background:#94a3b8"></div>
+          <div><div class="t">INCONNU</div><div class="d">Rapport incomplet : prudence.</div></div></div>
         """,
         unsafe_allow_html=True,
     )
@@ -503,8 +544,15 @@ with st.container(border=True):
     resultat = st.session_state.resultat
     if resultat:
         niveau = resultat["niveau"]
-        classe = {"DANGEROUS": "danger", "SUSPECT": "suspect"}.get(niveau, "safe")
-        icone = {"DANGEROUS": "⛔", "SUSPECT": "⚠️"}.get(niveau, "✅")
+        classe = {"DANGEROUS": "danger", "SUSPECT": "suspect", "INCONNU": "unknown"}.get(niveau, "safe")
+        icone = {"DANGEROUS": "⛔", "SUSPECT": "⚠️", "INCONNU": "❔"}.get(niveau, "✅")
+        if niveau == "INCONNU":
+            compteurs = "rapport VirusTotal incomplet ou indisponible"
+        else:
+            compteurs = (
+                f"{resultat['mal']} moteur(s) malveillant(s) · "
+                f"{resultat['sus']} suspect(s)"
+            )
         if resultat["consigne"]:
             statut = "Consigné dans le registre"
         elif resultat["erreur"]:
@@ -519,8 +567,7 @@ with st.container(border=True):
               <div class="v-body">
                 <div class="v-label {classe}">{html.escape(niveau)}</div>
                 <div class="v-url">{html.escape(resultat['url'])}</div>
-                <div class="v-meta">{resultat['mal']} moteur(s) malveillant(s) ·
-                  {resultat['sus']} suspect(s) · {resultat['ts']} · {statut}</div>
+                <div class="v-meta">{compteurs} · {resultat['ts']} · {statut}</div>
               </div>
             </div>
             """,
@@ -568,6 +615,7 @@ else:
                 badge = {
                     "DANGEROUS": "badge-danger",
                     "SUSPECT": "badge-suspect",
+                    "INCONNU": "badge-unknown",
                 }.get(risque, "badge-safe")
                 lignes.append(
                     f"<tr><td>{date_str}</td><td>{cible}</td>"
